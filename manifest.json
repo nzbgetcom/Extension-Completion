@@ -8,7 +8,7 @@
     "author": "kloaknet",
     "license": "GPLv3",
     "about": "Verifies that enough articles are available before starting the download.",
-    "queueEvents": "",
+    "queueEvents": "NZB_ADDED, NZB_DOWNLOADED, NZB_DELETED, NZB_MARKED",
     "requirements": [
         "This script requires NZBGet 15.0+ and Python 3.8.0+ to be installed on your system."
     ],
