@@ -838,10 +838,12 @@ def create_sockets(server, articles_to_check):
         # create connections
         if encryption:
             # build SSL socket, but without certificate requirement
-            context = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
+            context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
             context.verify_mode = ssl.CERT_NONE 
             context.options |= ssl.OP_NO_SSLv2 
-            context.options |= ssl.OP_NO_SSLv3
+            context.options |= ssl.OP_NO_SSLv3 
+            context.options |= ssl.OP_NO_TLSv1
+            context.minimum_version = ssl.TLSVersion.TLSv1_1
             for i in range(start_sock, end_sock):
                 s = socket.socket(af, socket.SOCK_STREAM)
                 sockets[i] = context.wrap_socket(s)
