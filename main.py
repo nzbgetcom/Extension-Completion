@@ -67,7 +67,7 @@ MAX_FAILURE = int(os.environ.get('NZBPO_MaxFailure', 0))
 CHECK_METHOD = 'STAT'
 VERBOSE = os.environ.get('NZBPO_Verbose', 'No') == 'Yes'
 EXTREME = os.environ.get('NZBPO_Extreme', 'No') == 'Yes'
-MIN_TLS_VERSION = os.environ.get('MinTLSVersion')
+MIN_TLS_VERSION = os.environ.get('NZBPO_MinTLSVersion')
 CHECK_LIMIT = int(os.environ.get('NZBPO_CheckLimit', 10))
 MAX_ARTICLES = int(os.environ.get('NZBPO_MaxArticles', 1000))
 MIN_ARTICLES = int(os.environ.get('NZBPO_MinArticles', 50))
