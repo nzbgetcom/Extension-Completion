@@ -4,7 +4,7 @@
     "homepage": "https://github.com/nzbgetcom/Extension-Completion",
     "kind": "SCAN/QUEUE/SCHEDULER",
     "displayName": "Completion",
-    "version": "3.0.0",
+    "version": "3.1.0",
     "author": "kloaknet",
     "license": "GPLv3",
     "about": "Verifies that enough articles are available before starting the download.",
@@ -27,6 +27,22 @@
         "NOTE: To stop the script or remove the .lock file, reload NZBGet via SYSTEM."
     ],
     "options": [
+        {
+            "name": "MinTLSVersion",
+            "displayName": "MinTLSVersion",
+            "value": "TLSv1_1",
+            "description": [
+                "The minimum supported SSL or TLS version.",
+                "Default = TLSv1_1."
+            ],
+            "select": [
+                "SSLv3",
+                "TLSv1",
+                "TLSv1_1",
+                "TLSv1_2",
+                "TLSv1_3"
+            ]
+        },
         {
             "name": "AgeLimit",
             "displayName": "AgeLimit",

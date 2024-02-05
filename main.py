@@ -67,6 +67,7 @@ MAX_FAILURE = int(os.environ.get('NZBPO_MaxFailure', 0))
 CHECK_METHOD = 'STAT'
 VERBOSE = os.environ.get('NZBPO_Verbose', 'No') == 'Yes'
 EXTREME = os.environ.get('NZBPO_Extreme', 'No') == 'Yes'
+MIN_TLS_VERSION = os.environ.get('MinTLSVersion')
 CHECK_LIMIT = int(os.environ.get('NZBPO_CheckLimit', 10))
 MAX_ARTICLES = int(os.environ.get('NZBPO_MaxArticles', 1000))
 MIN_ARTICLES = int(os.environ.get('NZBPO_MinArticles', 50))
@@ -80,6 +81,19 @@ if HOST == '0.0.0.0':
 PORT = os.environ['NZBOP_CONTROLPORT']  # NZBGet port
 USERNAME = os.environ['NZBOP_CONTROLUSERNAME']  # NZBGet username
 PASSWORD = os.environ['NZBOP_CONTROLPASSWORD']  # NZBGet password
+
+def get_min_tls_version(min_ver):
+    if (min_ver == "SSLv3"):
+        return ssl.TLSVersion.SSLv3
+    if (min_ver == "TLSv1"):
+        return ssl.TLSVersion.TLSv1
+    if (min_ver == "TLSv1_1"):
+        return ssl.TLSVersion.TLSv1_1
+    if (min_ver == "TLSv1_2"):
+        return ssl.TLSVersion.TLSv1_2
+    if (min_ver == "TLSv1_3"):
+        return ssl.TLSVersion.TLSv1_3
+    return ssl.TLSVersion.TLSv1
 
 def unpause_nzb(nzb_id):
     '''
@@ -838,13 +852,12 @@ def create_sockets(server, articles_to_check):
         # create connections
         if encryption:
             # build SSL socket, but without certificate requirement
-            context = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
-            context.verify_mode = ssl.CERT_NONE 
-            context.options |= ssl.OP_NO_SSLv2 
-            context.options |= ssl.OP_NO_SSLv3
+            context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+            context.minimum_version = get_min_tls_version(MIN_TLS_VERSION)
+            s = socket.socket(af, socket.SOCK_STREAM)
             for i in range(start_sock, end_sock):
                 s = socket.socket(af, socket.SOCK_STREAM)
-                sockets[i] = context.wrap_socket(s)
+                sockets[i] = context.wrap_socket(s, do_handshake_on_connect=False, server_hostname=host)
         else:
             # Non SSL
             for i in range(start_sock, end_sock):
