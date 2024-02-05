@@ -851,7 +851,6 @@ def create_sockets(server, articles_to_check):
                 sys.stdout.flush()
         # create connections
         if encryption:
-            # build SSL socket, but without certificate requirement
             context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
             context.minimum_version = get_min_tls_version(MIN_TLS_VERSION)
             s = socket.socket(af, socket.SOCK_STREAM)
