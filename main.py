@@ -44,11 +44,9 @@ AGE_SORT_LIMIT_SEC = 3600 * AGE_SORT_LIMIT
 CHECK_DUPES = os.environ.get("NZBPO_CheckDupes", "No")
 if CHECK_DUPES != "No" and os.environ.get("NZBOP_DUPECHECK") == "No":
     print(
-        (
-            "[WARNING] DupeCheck should be enabled in NZBGet, otherwise "
-            + "the CheckDupes option of this script that you have enabled "
-            + "does not work"
-        )
+        "[WARNING] DupeCheck should be enabled in NZBGet, otherwise "
+        + "the CheckDupes option of this script that you have enabled "
+        + "does not work"
     )
 FORCE_FAILURE = os.environ.get("NZBPO_ForceFailure", "No") == "Yes"
 CATEGORIES = os.environ.get("NZBPO_Categories", "").lower().split(",")
@@ -166,7 +164,7 @@ def force_failure(nzb_id):
         else:
             if VERBOSE:
                 print(
-                    ("[V] Leaving file: " + str(f.get("Filename")) + " in the NZB file")
+                    "[V] Leaving file: " + str(f.get("Filename")) + " in the NZB file"
                 )
     print("[WARNING] Forcing failure of NZB:")
     sys.stdout.flush()  # force message before lot of NZBGet messages
@@ -255,34 +253,28 @@ def get_nzb_status(nzb):
     if rar_msg_ids == -1:  # no such NZB file
         succes = True  # file send back to queue
         print(
-            (
-                "[WARNING] The NZB file "
-                + str(nzb[1])
-                + " does not seem to "
-                + "exist, resuming NZB."
-            )
+            "[WARNING] The NZB file "
+            + str(nzb[1])
+            + " does not seem to "
+            + "exist, resuming NZB."
         )
         unpause_nzb(nzb[0])  # unpause based on NZBGet ID
     elif rar_msg_ids == -2:  # empty NZB or no group
         succes = True  # file send back to queue
         print(
-            (
-                "[WARNING] The NZB file "
-                + str(nzb[1])
-                + " appears to be "
-                + "invalid, resuming NZB."
-            )
+            "[WARNING] The NZB file "
+            + str(nzb[1])
+            + " appears to be "
+            + "invalid, resuming NZB."
         )
         unpause_nzb(nzb[0])  # unpause based on NZBGet ID
     elif rar_msg_ids == -3:  # NZB without RAR files.
         succes = True  # file send back to queue
         print(
-            (
-                "[WARNING] The NZB file "
-                + str(nzb[1])
-                + " does not contain "
-                + "any .rar files and has been moved back to the queue."
-            )
+            "[WARNING] The NZB file "
+            + str(nzb[1])
+            + " does not contain "
+            + "any .rar files and has been moved back to the queue."
         )
         unpause_nzb(nzb[0])  # unpause based on NZBGet ID
     else:
@@ -290,11 +282,9 @@ def get_nzb_status(nzb):
         print("Maximum failed articles limit for NZB: " + str(failed_limit) + "%")
         if MAX_FAILURE > 0:
             print(
-                (
-                    "Maximum failed articles limit for highest level news server: "
-                    + str(MAX_FAILURE)
-                    + "%"
-                )
+                "Maximum failed articles limit for highest level news server: "
+                + str(MAX_FAILURE)
+                + "%"
             )
         failed_ratio = check_failure_status(rar_msg_ids, failed_limit, nzb[2])
         if VERBOSE:
@@ -388,13 +378,11 @@ def get_dupe_nzb_status(nzb):
         # top. Oldest file has lowest maxposttime.
         if VERBOSE:
             print(
-                (
-                    "[V] "
-                    + str(num_duplicates)
-                    + " duplicate of "
-                    + nzb[1]
-                    + " found in history"
-                )
+                "[V] "
+                + str(num_duplicates)
+                + " duplicate of "
+                + nzb[1]
+                + " found in history"
             )
         t = sorted(list_duplicates, key=itemgetter("MaxPostTime"))
         sorted_duplicates = sorted(t, key=itemgetter("DupeScore"), reverse=True)
@@ -535,14 +523,12 @@ def check_send_server_reply(sock, t, group, id, i, host, username, password):
         if not is_number(server_reply):
             if VERBOSE:
                 print(
-                    (
-                        "[WARNING] [V] Socket: "
-                        + str(i)
-                        + " "
-                        + str(host)
-                        + ", NNTP reply incorrect:"
-                        + str(t.split())
-                    )
+                    "[WARNING] [V] Socket: "
+                    + str(i)
+                    + " "
+                    + str(host)
+                    + ", NNTP reply incorrect:"
+                    + str(t.split())
                 )
             server_reply = "NNTP reply incorrect."
             error = True  # pass these vars so that next article will be sent
@@ -556,31 +542,27 @@ def check_send_server_reply(sock, t, group, id, i, host, username, password):
             # 430 no such article found
             if VERBOSE:
                 print(
-                    (
-                        "[WARNING] [V] Socket: "
-                        + str(i)
-                        + " "
-                        + str(host)
-                        + ", NNTP reply: "
-                        + str(t.split())
-                    )
+                    "[WARNING] [V] Socket: "
+                    + str(i)
+                    + " "
+                    + str(host)
+                    + ", NNTP reply: "
+                    + str(t.split())
                 )
             error = True  # article is not there
         elif server_reply in ("412"):  # 412 no newsgroup has been selected
             text = "GROUP " + group + "\r\n"
             if EXTREME:
                 print(
-                    (
-                        "[E] Socket: "
-                        + str(i)
-                        + " "
-                        + str(host)
-                        + ", NNTP reply: "
-                        + str(t.split())
-                    )
+                    "[E] Socket: "
+                    + str(i)
+                    + " "
+                    + str(host)
+                    + ", NNTP reply: "
+                    + str(t.split())
                 )
                 print(
-                    ("[E] Socket: " + str(i) + " " + str(host) + ", Send: " + str(text))
+                    "[E] Socket: " + str(i) + " " + str(host) + ", Send: " + str(text)
                 )
             sock.send(text.encode())
         elif server_reply in ("221"):
@@ -588,159 +570,137 @@ def check_send_server_reply(sock, t, group, id, i, host, username, password):
             msg_id_used = t.split()[2][1:-1]  # get msg id to identify ok article
             if EXTREME:
                 print(
-                    (
-                        "[E] Socket: "
-                        + str(i)
-                        + " "
-                        + str(host)
-                        + ", NNTP reply: "
-                        + str(t.split())
-                    )
+                    "[E] Socket: "
+                    + str(i)
+                    + " "
+                    + str(host)
+                    + ", NNTP reply: "
+                    + str(t.split())
                 )
         elif server_reply in ("223"):
             # 223 article retrieved - request text separately (reply on STAT)
             msg_id_used = t.split()[2][1:-1]  # get msg id to identify ok article
             if EXTREME:
                 print(
-                    (
-                        "[E] Socket: "
-                        + str(i)
-                        + " "
-                        + str(host)
-                        + ", NNTP reply: "
-                        + str(t.split())
-                    )
+                    "[E] Socket: "
+                    + str(i)
+                    + " "
+                    + str(host)
+                    + ", NNTP reply: "
+                    + str(t.split())
                 )
         elif server_reply in ("200", "201"):
             # 200 service available, posting permitted
             # 201 service available, posting prohibited
             if EXTREME:
                 print(
-                    (
-                        "[INFO] [E] Socket: "
-                        + str(i)
-                        + " "
-                        + str(host)
-                        + ", NNTP reply: "
-                        + str(t.split())
-                    )
+                    "[INFO] [E] Socket: "
+                    + str(i)
+                    + " "
+                    + str(host)
+                    + ", NNTP reply: "
+                    + str(t.split())
                 )
             text = CHECK_METHOD + " <" + id + ">\r\n"  # STAT is faster than HEAD
             if EXTREME:
                 print(
-                    ("[E] Socket: " + str(i) + " " + str(host) + ", Send: " + str(text))
+                    "[E] Socket: " + str(i) + " " + str(host) + ", Send: " + str(text)
                 )
             sock.send(text.encode())
         elif server_reply in ("381"):  # 381 Password required
             text = "AUTHINFO PASS %s\r\n" % (password)
             if EXTREME:
                 print(
-                    (
-                        "[E] Socket: "
-                        + str(i)
-                        + " "
-                        + str(host)
-                        + ", NNTP reply: "
-                        + str(t.split())
-                    )
+                    "[E] Socket: "
+                    + str(i)
+                    + " "
+                    + str(host)
+                    + ", NNTP reply: "
+                    + str(t.split())
                 )
                 print(
-                    ("[E] Socket: " + str(i) + " " + str(host) + ", Send: " + str(text))
+                    "[E] Socket: " + str(i) + " " + str(host) + ", Send: " + str(text)
                 )
             sock.send(text.encode())
         elif server_reply in ("281"):  # 281 Authentication accepted
             if EXTREME:
                 print(
-                    (
-                        "[E] Socket: "
-                        + str(i)
-                        + " "
-                        + str(host)
-                        + ", NNTP reply: "
-                        + str(t.split())
-                    )
+                    "[E] Socket: "
+                    + str(i)
+                    + " "
+                    + str(host)
+                    + ", NNTP reply: "
+                    + str(t.split())
                 )
         elif server_reply in ("211"):  # 211 group selected (group)
             if EXTREME:
                 print(
-                    (
-                        "[INFO] [E] Socket: "
-                        + str(i)
-                        + " "
-                        + str(host)
-                        + ", NNTP reply: "
-                        + str(t.split())
-                    )
+                    "[INFO] [E] Socket: "
+                    + str(i)
+                    + " "
+                    + str(host)
+                    + ", NNTP reply: "
+                    + str(t.split())
                 )
         elif server_reply in ("480"):  # 480 AUTHINFO required
             text = "AUTHINFO USER %s\r\n" % (username)
             if EXTREME:
                 print(
-                    (
-                        "[E] Socket: "
-                        + str(i)
-                        + " "
-                        + str(host)
-                        + ", NNTP reply: "
-                        + str(t.split())
-                    )
+                    "[E] Socket: "
+                    + str(i)
+                    + " "
+                    + str(host)
+                    + ", NNTP reply: "
+                    + str(t.split())
                 )
                 print(
-                    ("[E] Socket: " + str(i) + " " + str(host) + ", Send: " + str(text))
+                    "[E] Socket: " + str(i) + " " + str(host) + ", Send: " + str(text)
                 )
             sock.send(text.encode())
         elif str(server_reply[:2]) in ("48", "50"):
             # 48X or 50X incorrect news server account settings
             print(
-                (
-                    "[ERROR] Socket: "
-                    + str(i)
-                    + " "
-                    + str(host)
-                    + ", Incorrect news server account settings: "
-                    + str(t)
-                )
+                "[ERROR] Socket: "
+                + str(i)
+                + " "
+                + str(host)
+                + ", Incorrect news server account settings: "
+                + str(t)
             )
         elif server_reply in ("205"):  # NNTP Service exits normally
             sock.close()
             if EXTREME:
                 print(
-                    (
-                        "[E] Socket: "
-                        + str(i)
-                        + " "
-                        + str(host)
-                        + ", NNTP reply: "
-                        + str(t.split())
-                    )
+                    "[E] Socket: "
+                    + str(i)
+                    + " "
+                    + str(host)
+                    + ", NNTP reply: "
+                    + str(t.split())
                 )
             if VERBOSE:
                 print("[V] Socket " + str(i) + " closed.")
         elif server_reply in ("999"):  # script code for very slow news server
             if VERBOSE:
                 print(
-                    (
-                        "[WARNING] [V] Socket: "
-                        + str(i)
-                        + " "
-                        + str(host)
-                        + ", NNTP reply: "
-                        + str(t.split())
-                    )
+                    "[WARNING] [V] Socket: "
+                    + str(i)
+                    + " "
+                    + str(host)
+                    + ", NNTP reply: "
+                    + str(t.split())
                 )
             error = True  # article is assumed to be not there
             id_used = True
         else:
             if VERBOSE:
                 print(
-                    (
-                        "[WARNING] [V] Socket: "
-                        + str(i)
-                        + " "
-                        + str(host)
-                        + ", Not covered NNTP server reply code: "
-                        + str(t.split())
-                    )
+                    "[WARNING] [V] Socket: "
+                    + str(i)
+                    + " "
+                    + str(host)
+                    + ", Not covered NNTP server reply code: "
+                    + str(t.split())
                 )
         if VERBOSE or EXTREME:
             sys.stdout.flush()
@@ -759,7 +719,7 @@ def check_send_server_reply(sock, t, group, id, i, host, username, password):
             id_used = True
             if EXTREME:
                 print(
-                    ("[E] Socket: " + str(i) + " " + str(host) + ", Send: " + str(text))
+                    "[E] Socket: " + str(i) + " " + str(host) + ", Send: " + str(text)
                 )
             sock.send(text.encode())
         elif end_loop and server_reply not in ("205"):
@@ -767,19 +727,17 @@ def check_send_server_reply(sock, t, group, id, i, host, username, password):
             sock.send(text.encode())
             if EXTREME:
                 print(
-                    ("[E] Socket: " + str(i) + " " + str(host) + ", Send: " + str(text))
+                    "[E] Socket: " + str(i) + " " + str(host) + ", Send: " + str(text)
                 )
         if VERBOSE or EXTREME:
             sys.stdout.flush()
         return (error, id_used, server_reply, msg_id_used)
     except:
         print(
-            (
-                "Exception LINE: "
-                + str(traceback.print_exc())
-                + ": "
-                + str(sys.exc_info()[1])
-            )
+            "Exception LINE: "
+            + str(traceback.print_exc())
+            + ": "
+            + str(sys.exc_info()[1])
         )
         return (False, False, server_reply, -1)
 
@@ -888,11 +846,9 @@ def get_nzb_data(fname):
             each = int(temp / MAX_ARTICLES)
             if VERBOSE:
                 print(
-                    (
-                        "[V] Amount of to be checked articles limited to about "
-                        + str(MAX_ARTICLES)
-                        + " articles."
-                    )
+                    "[V] Amount of to be checked articles limited to about "
+                    + str(MAX_ARTICLES)
+                    + " articles."
                 )
         elif temp / each < MIN_ARTICLES:
             each = int(temp / MIN_ARTICLES)
@@ -900,12 +856,10 @@ def get_nzb_data(fname):
                 each = 1
             if VERBOSE:
                 print(
-                    (
-                        "[V] Amount of to be checked articles increased to "
-                        + "about "
-                        + str(MIN_ARTICLES)
-                        + " articles."
-                    )
+                    "[V] Amount of to be checked articles increased to "
+                    + "about "
+                    + str(MIN_ARTICLES)
+                    + " articles."
                 )
     t = rar_msg_ids[::each]
     rar_msg_ids = t
@@ -915,15 +869,13 @@ def get_nzb_data(fname):
     articles_to_check = len(rar_msg_ids)
     if VERBOSE:
         print(
-            (
-                "[V] NZB contains "
-                + str(all_articles)
-                + " articles, "
-                + str(rar_articles)
-                + " rar articles, "
-                + str(par_articles)
-                + " par2 articles."
-            )
+            "[V] NZB contains "
+            + str(all_articles)
+            + " articles, "
+            + str(rar_articles)
+            + " rar articles, "
+            + str(par_articles)
+            + " par2 articles."
         )
         print("[V] " + str(articles_to_check) + " rar articles will be checked.")
         sys.stdout.flush()
@@ -984,12 +936,10 @@ def get_server_settings(nzb_age):
             skip = True
             if VERBOSE:
                 print(
-                    (
-                        "[V] Skipping server: "
-                        + server[2]
-                        + ", disabled in "
-                        + "NZBGet settings."
-                    )
+                    "[V] Skipping server: "
+                    + server[2]
+                    + ", disabled in "
+                    + "NZBGet settings."
                 )
         # Server ID in SERVERS list
         elif (
@@ -1000,66 +950,56 @@ def get_server_settings(nzb_age):
             skip = True
             if VERBOSE:
                 print(
-                    (
-                        "[V] Skipping server: "
-                        + server[2]
-                        + ", not listed "
-                        + "as Server or FillServer in script settings."
-                    )
+                    "[V] Skipping server: "
+                    + server[2]
+                    + ", not listed "
+                    + "as Server or FillServer in script settings."
                 )
         # Server ID in FILL_SERVERS list and nzb older than AGE_LIMIT
         elif server[9] in FILL_SERVERS and nzb_age_days * 24.0 < AGE_LIMIT:
             skip = True
             if VERBOSE:
                 print(
-                    (
-                        "[V] Skipping Fill server: "
-                        + server[2]
-                        + ", NZB age of "
-                        + str(round(nzb_age_days * 24.0, 1))
-                        + " hours within AgeLimit of "
-                        + str(AGE_LIMIT)
-                        + " hours"
-                    )
+                    "[V] Skipping Fill server: "
+                    + server[2]
+                    + ", NZB age of "
+                    + str(round(nzb_age_days * 24.0, 1))
+                    + " hours within AgeLimit of "
+                    + str(AGE_LIMIT)
+                    + " hours"
                 )
         # Server retention lower than nzb age
         if retention < nzb_age_days and retention != 0:
             skip = True
             if VERBOSE:
                 print(
-                    (
-                        "[V] Skipping server: "
-                        + server[2]
-                        + ", retention of "
-                        + str(retention)
-                        + " days is less than NZB age of "
-                        + str(round(nzb_age_days, 1))
-                        + " days."
-                    )
+                    "[V] Skipping server: "
+                    + server[2]
+                    + ", retention of "
+                    + str(retention)
+                    + " days is less than NZB age of "
+                    + str(round(nzb_age_days, 1))
+                    + " days."
                 )
         # removing all to be skipped servers
         if skip == False:
             servers.append(server)
     if VERBOSE:
         print(
-            (
-                "[V] All news servers after filtering on Active, Servers, "
-                + "FillServers + AgeLimit and Retention, "
-                + " BEFORE filtering on NZBGet ServerX.Group: "
-            )
+            "[V] All news servers after filtering on Active, Servers, "
+            + "FillServers + AgeLimit and Retention, "
+            + " BEFORE filtering on NZBGet ServerX.Group: "
         )
         for server in servers:
             print(
-                (
-                    "[V] * "
-                    + str(server[2])
-                    + ":"
-                    + str(server[3])
-                    + ", SSL: "
-                    + str(server[6])
-                    + ", connections: "
-                    + str(server[7])
-                )
+                "[V] * "
+                + str(server[2])
+                + ":"
+                + str(server[3])
+                + ", SSL: "
+                + str(server[6])
+                + ", connections: "
+                + str(server[7])
             )
     # sort on groups, followed by lvl, so that all identical group numbers > 0
     # can be removed
@@ -1078,30 +1018,24 @@ def get_server_settings(nzb_age):
     servers = c
     if VERBOSE:
         print(
-            (
-                "[V] All active news servers AFTER filtering and sorting "
-                + "on NZBGet ServerX.Group:"
-            )
+            "[V] All active news servers AFTER filtering and sorting "
+            + "on NZBGet ServerX.Group:"
         )
         for server in servers:
             print(
-                (
-                    "[V] * "
-                    + str(server[2])
-                    + ":"
-                    + str(server[3])
-                    + ", SSL: "
-                    + str(server[6])
-                    + ", connections: "
-                    + str(server[7])
-                )
+                "[V] * "
+                + str(server[2])
+                + ":"
+                + str(server[3])
+                + ", SSL: "
+                + str(server[6])
+                + ", connections: "
+                + str(server[7])
             )
     if servers == []:
         print(
-            (
-                "[WARNING] No news servers after filtering, marking NZB as"
-                + " FAILED or BAD. May run in Verbose mode and check your settings!"
-            )
+            "[WARNING] No news servers after filtering, marking NZB as"
+            + " FAILED or BAD. May run in Verbose mode and check your settings!"
         )
     return servers
 
@@ -1114,12 +1048,10 @@ def create_sockets(server, articles_to_check):
     """
     if EXTREME:
         print(
-            (
-                "[E] create_sockets(server="
-                + str(server)
-                + ",articles_to_check= "
-                + str(articles_to_check)
-            )
+            "[E] create_sockets(server="
+            + str(server)
+            + ",articles_to_check= "
+            + str(articles_to_check)
         )
     server_no = -1
     conn_err = 0
@@ -1167,12 +1099,10 @@ def create_sockets(server, articles_to_check):
         if encryption:
             context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
             context.minimum_version = get_min_tls_version(MIN_TLS_VERSION)
-            s = socket.socket(af, socket.SOCK_STREAM)
+
             for i in range(start_sock, end_sock):
                 s = socket.socket(af, socket.SOCK_STREAM)
-                sockets[i] = context.wrap_socket(
-                    s, do_handshake_on_connect=False, server_hostname=host
-                )
+                sockets[i] = context.wrap_socket(s, server_hostname=host)
         else:
             # Non SSL
             for i in range(start_sock, end_sock):
@@ -1191,15 +1121,13 @@ def create_sockets(server, articles_to_check):
                 time.sleep(SOCKET_CREATE_INTERVAL)
             except Exception as e:
                 print(
-                    (
-                        "[WARNING] Socket: "
-                        + str(i)
-                        + " "
-                        + str(e)
-                        + ", check host, port and number of connections settings"
-                        + " for server "
-                        + host
-                    )
+                    "[WARNING] Socket: "
+                    + str(i)
+                    + " "
+                    + str(e)
+                    + ", check host, port and number of connections settings"
+                    + " for server "
+                    + host
                 )
                 sys.stdout.flush()
                 failed_sockets[i] = i
@@ -1210,12 +1138,10 @@ def create_sockets(server, articles_to_check):
             if req_wait > 0:
                 if VERBOSE:
                     print(
-                        (
-                            "[V] Waiting "
-                            + str(round(req_wait, 2))
-                            + " sec "
-                            + "while NZBGet closes its news server connections."
-                        )
+                        "[V] Waiting "
+                        + str(round(req_wait, 2))
+                        + " sec "
+                        + "while NZBGet closes its news server connections."
                     )
                     sys.stdout.flush()
                 time.sleep(req_wait)  # forum.NZBGet.net/viewtopic.php?t=2754
@@ -1240,13 +1166,11 @@ def check_failure_status(rar_msg_ids, failed_limit, nzb_age):
     """
     if EXTREME:
         print(
-            (
-                "[E] check_failure_status(rar_msg_ids="
-                + str(rar_msg_ids)
-                + ", failed_limit="
-                + str(failed_limit)
-                + ")"
-            )
+            "[E] check_failure_status(rar_msg_ids="
+            + str(rar_msg_ids)
+            + ", failed_limit="
+            + str(failed_limit)
+            + ")"
         )
     articles_to_check = len(rar_msg_ids)
     # message on each 25 %
@@ -1336,24 +1260,20 @@ def check_failure_status(rar_msg_ids, failed_limit, nzb_age):
                     if socket_loop_count[i] < 5:
                         if EXTREME:
                             print(
-                                (
-                                    "[E] Socket: "
-                                    + str(i)
-                                    + " "
-                                    + str(err[0])
-                                    + " "
-                                    + str(err[1])
-                                )
+                                "[E] Socket: "
+                                + str(i)
+                                + " "
+                                + str(err[0])
+                                + " "
+                                + str(err[1])
                             )
                             print(
-                                (
-                                    "[E] Socket: "
-                                    + str(i)
-                                    + " Failed to "
-                                    + "get complete reply from server, waiting "
-                                    + str(int(SOCKET_LOOP_INTERVAL * 1000 / num_conn))
-                                    + " ms to avoid looping."
-                                )
+                                "[E] Socket: "
+                                + str(i)
+                                + " Failed to "
+                                + "get complete reply from server, waiting "
+                                + str(int(SOCKET_LOOP_INTERVAL * 1000 / num_conn))
+                                + " ms to avoid looping."
                             )
                             sys.stdout.flush()
                         time.sleep(SOCKET_LOOP_INTERVAL / num_conn)
@@ -1362,12 +1282,10 @@ def check_failure_status(rar_msg_ids, failed_limit, nzb_age):
                     if socket_loop_count[i] == 5:
                         if VERBOSE:
                             print(
-                                (
-                                    "[V] Socket: "
-                                    + str(i)
-                                    + " No data "
-                                    + "received on 5th retry, pausing script for 2 sec."
-                                )
+                                "[V] Socket: "
+                                + str(i)
+                                + " No data "
+                                + "received on 5th retry, pausing script for 2 sec."
                             )
                             sys.stdout.flush()
                         socket_loop_count[i] += 1
@@ -1376,34 +1294,28 @@ def check_failure_status(rar_msg_ids, failed_limit, nzb_age):
                     elif socket_loop_count[i] >= 5:
                         if VERBOSE:
                             print(
-                                (
-                                    "[V] Socket: "
-                                    + str(i)
-                                    + " "
-                                    + str(err[0])
-                                    + " "
-                                    + str(err[1])
-                                )
+                                "[V] Socket: "
+                                + str(i)
+                                + " "
+                                + str(err[0])
+                                + " "
+                                + str(err[1])
                             )
                             print(
-                                (
-                                    "[V] Socket: "
-                                    + str(i)
-                                    + " Still no data "
-                                    + "received after waiting for 1 sec, "
-                                    + " marking requested article as failed."
-                                )
+                                "[V] Socket: "
+                                + str(i)
+                                + " Still no data "
+                                + "received after waiting for 1 sec, "
+                                + " marking requested article as failed."
                             )
                             sys.stdout.flush()
                         reply = "999 Article marked as failed by script.".encode()
                         failed_wait_count += 1
                         if failed_wait_count >= 20:
                             print(
-                                (
-                                    "[WARNING] Skipping current server as "
-                                    + "it is replying very slow on header "
-                                    + "requests for this NZB file"
-                                )
+                                "[WARNING] Skipping current server as "
+                                + "it is replying very slow on header "
+                                + "requests for this NZB file"
                             )
                             loop_fail = True
                             break  # exit for i loop
@@ -1421,25 +1333,21 @@ def check_failure_status(rar_msg_ids, failed_limit, nzb_age):
                     ):
                         if EXTREME:
                             print(
-                                (
-                                    "[E] Article "
-                                    + str(send_articles)
-                                    + " already checked and available on server "
-                                    + servers[rar_msg_ids[send_articles][4] - 1][2]
-                                )
+                                "[E] Article "
+                                + str(send_articles)
+                                + " already checked and available on server "
+                                + servers[rar_msg_ids[send_articles][4] - 1][2]
                             )
                         send_articles += 1
                         if send_articles in message_on:
                             print(
-                                (
-                                    "Requested ["
-                                    + str(send_articles)
-                                    + "/"
-                                    + str(articles_to_check)
-                                    + "] articles, "
-                                    + str(failed_articles)
-                                    + " failed."
-                                )
+                                "Requested ["
+                                + str(send_articles)
+                                + "/"
+                                + str(articles_to_check)
+                                + "] articles, "
+                                + str(failed_articles)
+                                + " failed."
                             )
                             sys.stdout.flush()
                 # msg received, and msg not checked/ok yet, and not all
@@ -1471,15 +1379,13 @@ def check_failure_status(rar_msg_ids, failed_limit, nzb_age):
                         send_articles += 1
                         if send_articles in message_on:
                             print(
-                                (
-                                    "Requested ["
-                                    + str(send_articles)
-                                    + "/"
-                                    + str(articles_to_check)
-                                    + "] articles, "
-                                    + str(failed_articles)
-                                    + " failed."
-                                )
+                                "Requested ["
+                                + str(send_articles)
+                                + "/"
+                                + str(articles_to_check)
+                                + "] articles, "
+                                + str(failed_articles)
+                                + " failed."
                             )
                             sys.stdout.flush()
                 failed_ratio = failed_articles * 100.0 / articles_to_check
@@ -1503,24 +1409,20 @@ def check_failure_status(rar_msg_ids, failed_limit, nzb_age):
                     if socket_loop_count[i] < 5:
                         if EXTREME:
                             print(
-                                (
-                                    "[E] Socket: "
-                                    + str(i)
-                                    + " "
-                                    + str(err[0])
-                                    + " "
-                                    + str(err[1])
-                                )
+                                "[E] Socket: "
+                                + str(i)
+                                + " "
+                                + str(err[0])
+                                + " "
+                                + str(err[1])
                             )
                             print(
-                                (
-                                    "[E] Socket: "
-                                    + str(i)
-                                    + " Failed to "
-                                    + "get complete reply from server, waiting "
-                                    + str(int(SOCKET_LOOP_INTERVAL * 1000 / num_conn))
-                                    + " ms to avoid looping."
-                                )
+                                "[E] Socket: "
+                                + str(i)
+                                + " Failed to "
+                                + "get complete reply from server, waiting "
+                                + str(int(SOCKET_LOOP_INTERVAL * 1000 / num_conn))
+                                + " ms to avoid looping."
                             )
                             sys.stdout.flush()
                         time.sleep(SOCKET_LOOP_INTERVAL / num_conn)
@@ -1529,12 +1431,10 @@ def check_failure_status(rar_msg_ids, failed_limit, nzb_age):
                     if socket_loop_count[i] == 5:
                         if VERBOSE:
                             print(
-                                (
-                                    "[V] Socket: "
-                                    + str(i)
-                                    + ", no data "
-                                    + "received on 5th retry, pausing script for 1 sec."
-                                )
+                                "[V] Socket: "
+                                + str(i)
+                                + ", no data "
+                                + "received on 5th retry, pausing script for 1 sec."
                             )
                             sys.stdout.flush()
                         socket_loop_count[i] += 1
@@ -1543,23 +1443,19 @@ def check_failure_status(rar_msg_ids, failed_limit, nzb_age):
                     elif socket_loop_count[i] >= 5:
                         if VERBOSE:
                             print(
-                                (
-                                    "[V] Socket: "
-                                    + str(i)
-                                    + " "
-                                    + str(err[0])
-                                    + " "
-                                    + str(err[1])
-                                )
+                                "[V] Socket: "
+                                + str(i)
+                                + " "
+                                + str(err[0])
+                                + " "
+                                + str(err[1])
                             )
                             print(
-                                (
-                                    "[V] Socket: "
-                                    + str(i)
-                                    + " Still no data "
-                                    + "received after waiting for 1 sec, "
-                                    + " marking request as failed."
-                                )
+                                "[V] Socket: "
+                                + str(i)
+                                + " Still no data "
+                                + "received after waiting for 1 sec, "
+                                + " marking request as failed."
                             )
                             sys.stdout.flush()
                         reply = "999 request marked as failed by script.".encode()
@@ -1577,11 +1473,9 @@ def check_failure_status(rar_msg_ids, failed_limit, nzb_age):
                         end_count += 1
                         if end_count >= num_conn:
                             print(
-                                (
-                                    "All requested replies received, "
-                                    + str(failed_articles)
-                                    + " failed."
-                                )
+                                "All requested replies received, "
+                                + str(failed_articles)
+                                + " failed."
                             )
                     # found ok article on server, store success:
                     elif not error and server_reply == "223".encode():
@@ -1595,11 +1489,9 @@ def check_failure_status(rar_msg_ids, failed_limit, nzb_age):
                         end_count += 1
                         if end_count >= num_conn:
                             print(
-                                (
-                                    "All requested article replies received, "
-                                    + str(failed_articles)
-                                    + " failed."
-                                )
+                                "All requested article replies received, "
+                                + str(failed_articles)
+                                + " failed."
                             )
                     elif not error and server_reply == "205".encode():
                         # socket closed in check_send_server_reply
@@ -1620,15 +1512,13 @@ def check_failure_status(rar_msg_ids, failed_limit, nzb_age):
                 SOCKET_LOOP_INTERVAL
             )  # waiting and pray the connection will be closed
         print(
-            (
-                "Failed ratio for server: "
-                + host
-                + ": "
-                + str(round(failed_ratio, 1))
-                + "%. Server check completed in "
-                + str(round(time.time() - start_time, 2))
-                + " sec."
-            )
+            "Failed ratio for server: "
+            + host
+            + ": "
+            + str(round(failed_ratio, 1))
+            + "%. Server check completed in "
+            + str(round(time.time() - start_time, 2))
+            + " sec."
         )
         if failed_ratio < failed_limit or failed_ratio == 0:  # ok on last provider
             break
@@ -1663,7 +1553,7 @@ def lock_file():
         time_stamp = int(fd.readline())
         if VERBOSE:
             print(
-                ("[V] time_stamp from completion.lock file= " + str(time_stamp))
+                "[V] time_stamp from completion.lock file= " + str(time_stamp)
             )  ## added for debug issue reported by blackhawkpr, probably no time stamp in lock file
         fd.close()
         # Check if the .lock file was created before or after the last restart
@@ -1678,12 +1568,10 @@ def lock_file():
         # Check if the .lock file is not older than 30 minutes
         elif server_time - 1800 > time_stamp:
             print(
-                (
-                    "[ERROR] Script seems to be running for more than 30 "
-                    + "minutes and has most likely crashed. Check your logs and "
-                    "report the log and errors at "
-                    + "http://forum.NZBGet.net/viewtopic.php?f=8&t=1736"
-                )
+                "[ERROR] Script seems to be running for more than 30 "
+                + "minutes and has most likely crashed. Check your logs and "
+                "report the log and errors at "
+                + "http://forum.NZBGet.net/viewtopic.php?f=8&t=1736"
             )
             # overwrite .lock file time_stamp
             fd = open(f_name, "w")
@@ -1746,11 +1634,9 @@ def nzbget_paused():
         while download_rate > 0:  # avoid double use of connections
             if VERBOSE:
                 print(
-                    (
-                        "[V] Download rate: "
-                        + str(round(download_rate / 1000.0, 1))
-                        + " kB/s, waiting 1 sec to stop downloading"
-                    )
+                    "[V] Download rate: "
+                    + str(round(download_rate / 1000.0, 1))
+                    + " kB/s, waiting 1 sec to stop downloading"
                 )
                 sys.stdout.flush()
             time.sleep(1)  # let the connections cool down 1 sec
@@ -1759,10 +1645,8 @@ def nzbget_paused():
             if download_rate == 0:
                 if VERBOSE:
                     print(
-                        (
-                            "[V] Waiting 5 sec while NZBGet closes the news "
-                            + "server connections."
-                        )
+                        "[V] Waiting 5 sec while NZBGet closes the news "
+                        + "server connections."
                     )
                     sys.stdout.flush()
                 time.sleep(5)  # forum.NZBGet.net/viewtopic.php?t=2754
@@ -1807,10 +1691,8 @@ def get_prio_nzb(jobs, paused_jobs):
                 max_queued_priority = nzb_priority
     if VERBOSE and max_queued_priority != -1.7976931348623157e308:
         print(
-            (
-                "[V] Maximum priority of DOWNLOADING / QUEUED NZBs = "
-                + str(max_queued_priority)
-            )
+            "[V] Maximum priority of DOWNLOADING / QUEUED NZBs = "
+            + str(max_queued_priority)
         )
     for job in paused_jobs:
         nzb_priority = job["MaxPriority"]
@@ -1829,10 +1711,8 @@ def get_prio_nzb(jobs, paused_jobs):
     if do_check == False and max_queued_priority != -1.7976931348623157e308:
         if VERBOSE:
             print(
-                (
-                    "[V] QUEUED / DOWNLOADING NZBs have higher or equal "
-                    + "priority than by script paused items, skipping check"
-                )
+                "[V] QUEUED / DOWNLOADING NZBs have higher or equal "
+                + "priority than by script paused items, skipping check"
             )
     if do_check:
         paused = nzbget_paused()  # check if NZBGet is paused, +pause NZBGet
@@ -1845,27 +1725,21 @@ def get_prio_nzb(jobs, paused_jobs):
             for job in paused_jobs:
                 nzb_filename = get_nzb_filename(job["Parameters"])
                 print(
-                    (
-                        "[V] * "
-                        + str(nzb_filename)
-                        + ", Age: "
-                        + str(
-                            round((int(time.time()) - job["MaxPostTime"]) / 3600.0, 1)
-                        )
-                        + " hours, Priority: "
-                        + str(job["MaxPriority"])
-                    )
+                    "[V] * "
+                    + str(nzb_filename)
+                    + ", Age: "
+                    + str(round((int(time.time()) - job["MaxPostTime"]) / 3600.0, 1))
+                    + " hours, Priority: "
+                    + str(job["MaxPriority"])
                 )
         # sort on nzb age, but move older than max-age to bottom, then
         # sort of priority. Priority items will be on top.
         if VERBOSE:
             print(
-                (
-                    "[V] Ignoring sorting priority of items older than "
-                    + "AgeSortLimit of "
-                    + str(AGE_SORT_LIMIT)
-                    + " hours"
-                )
+                "[V] Ignoring sorting priority of items older than "
+                + "AgeSortLimit of "
+                + str(AGE_SORT_LIMIT)
+                + " hours"
             )
         max_age = int(time.time()) - int(AGE_SORT_LIMIT_SEC)
         t1 = sorted(
@@ -1884,16 +1758,12 @@ def get_prio_nzb(jobs, paused_jobs):
             for job in jobs_sorted:
                 nzb_filename = get_nzb_filename(job["Parameters"])
                 print(
-                    (
-                        "[V] * "
-                        + str(nzb_filename)
-                        + ", Age: "
-                        + str(
-                            round((int(time.time()) - job["MaxPostTime"]) / 3600.0, 1)
-                        )
-                        + " hours, Priority: "
-                        + str(job["MaxPriority"])
-                    )
+                    "[V] * "
+                    + str(nzb_filename)
+                    + ", Age: "
+                    + str(round((int(time.time()) - job["MaxPostTime"]) / 3600.0, 1))
+                    + " hours, Priority: "
+                    + str(job["MaxPriority"])
                 )
         for job in jobs_sorted:
             nzb_filename = get_nzb_filename(job["Parameters"])
@@ -1916,11 +1786,9 @@ def get_prio_nzb(jobs, paused_jobs):
             if get_nzb_status(nzb):
                 break
         print(
-            (
-                "Overall check completed in "
-                + str(round(time.time() - start_time, 2))
-                + " sec."
-            )
+            "Overall check completed in "
+            + str(round(time.time() - start_time, 2))
+            + " sec."
         )
         nzbget_resume()
 
@@ -2014,33 +1882,27 @@ def scan_call():
         nzb_dir = os.environ["NZBOP_NZBDIR"]
         if nzb_dir[-1:] == "\\" or nzb_dir[-1:] == "/":
             print(
-                (
-                    "[WARNING] Please correct your NZBGet PATHS Settings "
-                    + 'by removing the trailing "'
-                    + str(os.sep)
-                    + '"!'
-                )
+                "[WARNING] Please correct your NZBGet PATHS Settings "
+                + 'by removing the trailing "'
+                + str(os.sep)
+                + '"!'
             )
         if os.sep == "\\":  # windows \
             if nzb_dir.find("/") != -1:
                 print(
-                    (
-                        "[WARNING] Please correct your NZBGet PATHS Settings "
-                        + 'using "'
-                        + str(os.sep)
-                        + '" only!'
-                    )
+                    "[WARNING] Please correct your NZBGet PATHS Settings "
+                    + 'using "'
+                    + str(os.sep)
+                    + '" only!'
                 )
         else:  # nix
             if nzb_dir.find("\\") != -1:
                 print("nix")
                 print(
-                    (
-                        "[WARNING] Please correct your NZBGet PATHS Settings "
-                        + 'using "'
-                        + str(os.sep)
-                        + '" only!'
-                    )
+                    "[WARNING] Please correct your NZBGet PATHS Settings "
+                    + 'using "'
+                    + str(os.sep)
+                    + '" only!'
                 )
         nzb_filename = nzb_filename.replace(nzb_dir + os.sep, "")
         l_nzb = len(nzb_filename)  # length for file matching, with .nzb ext
@@ -2057,12 +1919,10 @@ def scan_call():
         if c > 0:  # already 1 file with same name in queue/history
             if VERBOSE:
                 print(
-                    (
-                        "[V] Found "
-                        + str(c)
-                        + " queued / history nzb with identical name: "
-                        + nzb_filename
-                    )
+                    "[V] Found "
+                    + str(c)
+                    + " queued / history nzb with identical name: "
+                    + nzb_filename
                 )
             # num between .nzb. .queued is lowest num not in dupe_list_num
             for x in range(1, c + 1):
