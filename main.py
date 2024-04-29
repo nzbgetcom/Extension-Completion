@@ -142,7 +142,7 @@ def force_failure(nzb_id):
     When available, the smallest par and smallest other file will be kept.
     """
     if VERBOSE:
-        print(("[V] force_failure(nzb_id=" + str(nzb_id) + ")"))
+        print("[V] force_failure(nzb_id=" + str(nzb_id) + ")")
     NZBGet = connect_to_nzbget()
     data = NZBGet.listfiles(0, 0, [int(nzb_id)])
     id_list = []
@@ -186,7 +186,7 @@ def force_failure_dupe(dupe_nzb_id):
     feed for movies or other stuff is used that might produce dupes.
     """
     if VERBOSE:
-        print(("[V] force_failure_dupe(nzb_id=" + str(dupe_nzb_id) + ")"))
+        print("[V] force_failure_dupe(nzb_id=" + str(dupe_nzb_id) + ")")
     NZBGet = connect_to_nzbget()
     if VERBOSE:
         print("[V] Pausing failed DUPE NZB before returning to queue.")
@@ -248,8 +248,8 @@ def get_nzb_status(nzb):
     script can't.
     """
     if VERBOSE:
-        print(("[V] get_nzb_status(nzb=" + str(nzb) + ")"))
-    print(('Checking: "' + nzb[1] + '"'))
+        print("[V] get_nzb_status(nzb=" + str(nzb) + ")")
+    print('Checking: "' + nzb[1] + '"')
     # collect rar msg ids that need to be checked
     rar_msg_ids = get_nzb_data(os.environ["NZBOP_NZBDIR"] + os.sep + nzb[1])
     if rar_msg_ids == -1:  # no such NZB file
@@ -287,7 +287,7 @@ def get_nzb_status(nzb):
         unpause_nzb(nzb[0])  # unpause based on NZBGet ID
     else:
         failed_limit = 100 - nzb[3] / 10.0
-        print(("Maximum failed articles limit for NZB: " + str(failed_limit) + "%"))
+        print("Maximum failed articles limit for NZB: " + str(failed_limit) + "%")
         if MAX_FAILURE > 0:
             print(
                 (
@@ -298,13 +298,13 @@ def get_nzb_status(nzb):
             )
         failed_ratio = check_failure_status(rar_msg_ids, failed_limit, nzb[2])
         if VERBOSE:
-            print(("[V] Total failed ratio: " + str(round(failed_ratio, 1)) + "%"))
+            print("[V] Total failed ratio: " + str(round(failed_ratio, 1)) + "%")
         if (
             failed_ratio < failed_limit
             and (failed_ratio < MAX_FAILURE or MAX_FAILURE == 0)
         ) or failed_ratio == 0:
             succes = True
-            print(('Resuming: "' + nzb[1] + '"'))
+            print('Resuming: "' + nzb[1] + '"')
             sys.stdout.flush()
             unpause_nzb(nzb[0])  # unpause based on NZBGet ID
         elif (
@@ -314,7 +314,7 @@ def get_nzb_status(nzb):
             succes = False
             if VERBOSE:
                 if not FORCE_FAILURE:
-                    print(('[V] Marked as BAD: "' + nzb[1] + '"'))
+                    print('[V] Marked as BAD: "' + nzb[1] + '"')
                     sys.stdout.flush()  # otherwise NZBGet sends message first
             if FORCE_FAILURE:
                 force_failure(nzb[0])
@@ -326,31 +326,25 @@ def get_nzb_status(nzb):
             if CHECK_DUPES != "no" and nzb[4] != "":
                 if get_dupe_nzb_status(nzb):
                     print(
-                        (
-                            '"'
-                            + nzb[1]
-                            + '" moved to history as DUPE, '
-                            + "complete DUPE returned to queue."
-                        )
+                        '"'
+                        + nzb[1]
+                        + '" moved to history as DUPE, '
+                        + "complete DUPE returned to queue."
                     )
                 else:
                     print(
-                        (
-                            '[WARNING] "'
-                            + nzb[1]
-                            + '", remains paused for next check, '
-                            + "no suitable/complete DUPEs found in history"
-                        )
+                        '[WARNING] "'
+                        + nzb[1]
+                        + '", remains paused for next check, '
+                        + "no suitable/complete DUPEs found in history"
                     )
             elif CHECK_DUPES != "no" and nzb[4] == "" and VERBOSE:
                 print(
-                    (
-                        "[V] "
-                        + nzb[1]
-                        + " is not added via RSS, therefore "
-                        + "the dupekey is empty and checking for DUPEs in the history "
-                        + "is skipped."
-                    )
+                    "[V] "
+                    + nzb[1]
+                    + " is not added via RSS, therefore "
+                    + "the dupekey is empty and checking for DUPEs in the history "
+                    + "is skipped."
                 )
     return succes
 
@@ -362,7 +356,7 @@ def get_dupe_nzb_status(nzb):
     back into the queue, and move the otherone to history.
     """
     if VERBOSE:
-        print(("[V] get_dupe_nzb_status(nzb=" + str(nzb) + ")"))
+        print("[V] get_dupe_nzb_status(nzb=" + str(nzb) + ")")
     # get the data from the active history
     data = call_nzbget_direct("history")
     jobs = json.loads(data)
@@ -386,10 +380,8 @@ def get_dupe_nzb_status(nzb):
             else:
                 if VERBOSE:
                     print(
-                        (
-                            "[V] DUPE NZB found with lower dupe score, "
-                            + "ignored due to SameScore setting."
-                        )
+                        "[V] DUPE NZB found with lower dupe score, "
+                        + "ignored due to SameScore setting."
                     )
     if duplicate:
         # sort on nzb age, then on dupescore. Higher score items will be on
@@ -415,15 +407,13 @@ def get_dupe_nzb_status(nzb):
             nzb_age = job["MaxPostTime"]  # nzb age
             nzb_critical_health = job["CriticalHealth"]
             print(
-                (
-                    'Checking DUPE: "'
-                    + nzb_filename
-                    + '" ['
-                    + str(i)
-                    + "/"
-                    + str(num_duplicates)
-                    + "]"
-                )
+                'Checking DUPE: "'
+                + nzb_filename
+                + '" ['
+                + str(i)
+                + "/"
+                + str(num_duplicates)
+                + "]"
             )
             rar_msg_ids = get_nzb_data(
                 os.environ["NZBOP_NZBDIR"] + os.sep + nzb_filename
@@ -446,18 +436,19 @@ def get_dupe_nzb_status(nzb):
                     mark_bad_dupe(nzb_id)
             else:
                 failed_limit = 100 - nzb_critical_health / 10.0
-                print(("[V] Maximum failed articles limit: " + str(failed_limit) + "%"))
+                print("[V] Maximum failed articles limit: " + str(failed_limit) + "%")
                 failed_ratio = check_failure_status(rar_msg_ids, failed_limit, nzb[2])
                 if VERBOSE:
                     print(
-                        ("[V] Total failed ratio: " + str(round(failed_ratio, 1)) + "%")
+                        "[V] Total failed ratio: " + str(round(failed_ratio, 1)) + "%"
                     )
+
                 if (
                     failed_ratio < failed_limit
                     and (failed_ratio < MAX_FAILURE or MAX_FAILURE == 0)
                 ) or failed_ratio == 0:
                     success = True
-                    print(('Resuming DUPE: "' + nzb_filename + '"'))
+                    print('Resuming DUPE: "' + nzb_filename + '"')
                     sys.stdout.flush()
                     unpause_nzb_dupe(nzb_id, nzb[0])  # resume on NZBGet ID
                     break
@@ -468,9 +459,9 @@ def get_dupe_nzb_status(nzb):
                     success = False
                     if VERBOSE:
                         if not FORCE_FAILURE:
-                            print(('[V] Marked as BAD: "' + nzb[1] + '"'))
+                            print('[V] Marked as BAD: "' + nzb[1] + '"')
                         else:
-                            print(('[V] Forcing failure of: "' + nzb[1] + '"'))
+                            print('[V] Forcing failure of: "' + nzb[1] + '"')
                         sys.stdout.flush()
                     if FORCE_FAILURE:
                         force_failure_dupe(nzb_id)
@@ -480,7 +471,7 @@ def get_dupe_nzb_status(nzb):
                     success = False
     else:
         if VERBOSE:
-            print(("[V] No DUPE of " + nzb[1] + " found in history."))
+            print("[V] No DUPE of " + nzb[1] + " found in history.")
         success = False
     return success
 
@@ -724,7 +715,7 @@ def check_send_server_reply(sock, t, group, id, i, host, username, password):
                     )
                 )
             if VERBOSE:
-                print(("[V] Socket " + str(i) + " closed."))
+                print("[V] Socket " + str(i) + " closed.")
         elif server_reply in ("999"):  # script code for very slow news server
             if VERBOSE:
                 print(
@@ -799,7 +790,7 @@ def fix_nzb(nzb_lines):
     correctly in check_nzb(), the single line is splitted on the >< mark
     """
     if VERBOSE:
-        print(("[V] fix_nzb(nzb_lines=" + str(nzb_lines) + ")"))
+        print("[V] fix_nzb(nzb_lines=" + str(nzb_lines) + ")")
         print("[V] Splitting NZB data into separate lines.")
         sys.stdout.flush()
     nzb_lines = str(nzb_lines)
@@ -823,7 +814,7 @@ def get_nzb_data(fname):
     to be checked
     """
     if VERBOSE:
-        print(("[V] get_nzb_data(fname=" + str(fname) + ")"))
+        print("[V] get_nzb_data(fname=" + str(fname) + ")")
         sys.stdout.flush()
     if os.path.isfile(fname):
         file_exists = True
@@ -861,12 +852,12 @@ def get_nzb_data(fname):
     if not group:
         print("[ERROR] No group found in NZB file.")
         if VERBOSE:
-            print(("[V] group: " + str(group)))
+            print("[V] group: " + str(group))
         return -2
     if len(all_msg_ids) == 0:
         print("[ERROR] No message-ids found in NZB file")
         if VERBOSE:
-            print(("[V] all_msg_ids: " + str(all_msg_ids)))
+            print("[V] all_msg_ids: " + str(all_msg_ids))
         return -2
     rar_msg_ids = []
     par_msg_ids = []
@@ -886,11 +877,11 @@ def get_nzb_data(fname):
     if FULL_CHECK_NO_PARS and par_articles < 1:
         each = 1  # check each article
         if VERBOSE:
-            print(("[V] No par files in release, all articles will be " + "checked."))
+            print("[V] No par files in release, all articles will be " + "checked.")
     elif FULL_CHECK_NO_PARS and par_articles == 1:
         each = 1  # check each article
         if VERBOSE:
-            print(("[V] 1 par file in release, all articles will be " + "checked."))
+            print("[V] 1 par file in release, all articles will be " + "checked.")
     else:
         each = int(100 / CHECK_LIMIT)  # check each Xth article only
         if temp / each > MAX_ARTICLES:
@@ -934,7 +925,7 @@ def get_nzb_data(fname):
                 + " par2 articles."
             )
         )
-        print(("[V] " + str(articles_to_check) + " rar articles will be checked."))
+        print("[V] " + str(articles_to_check) + " rar articles will be checked.")
         sys.stdout.flush()
     return rar_msg_ids
 
@@ -945,7 +936,7 @@ def get_server_settings(nzb_age):
     them in a list. Filter out all but 1 server in same group.
     """
     if VERBOSE:
-        print(("[V] get_server_settings(nzb_age=" + str(nzb_age) + ")"))
+        print("[V] get_server_settings(nzb_age=" + str(nzb_age) + ")")
     # get news server settings for each server
     NZBGet = connect_to_nzbget()
     nzbget_status = NZBGet.status()
@@ -1147,16 +1138,14 @@ def create_sockets(server, articles_to_check):
         end_sock = num_conn
         if VERBOSE:
             print(
-                (
-                    "[V] Limiting the number of sockets to "
-                    + str(end_sock)
-                    + " to keep the number of sockets below the number of articles"
-                )
+                "[V] Limiting the number of sockets to "
+                + str(end_sock)
+                + " to keep the number of sockets below the number of articles"
             )
     sockets = [None] * num_conn
     failed_sockets = [-1] * num_conn
     if VERBOSE:
-        print(("[V] Creating sockets for server: " + host))
+        print("[V] Creating sockets for server: " + host)
         sys.stdout.flush()
     try:
         # check if we *must* use IPv6 for this host
@@ -1167,12 +1156,12 @@ def create_sockets(server, articles_to_check):
                 break
         if af == socket.AF_INET6:
             if VERBOSE:
-                print(("[V] Using IPv6 for " + host))
+                print("[V] Using IPv6 for " + host)
                 sys.stdout.flush()
         else:
             af = socket.AF_INET  # Default to IPv4, even if unexpected response
             if VERBOSE:
-                print(("[V] Using IPv4 for " + host))
+                print("[V] Using IPv4 for " + host)
                 sys.stdout.flush()
         # create connections
         if encryption:
@@ -1192,9 +1181,9 @@ def create_sockets(server, articles_to_check):
             # set timeout for trying to connect (e.g. wrong port config)
             sockets[i].settimeout(NNTP_TIME_OUT)
             try:
-                sockets[i].connect((host, port))
+                sockets[i].connect(host, port)
                 if VERBOSE:
-                    print(("[V] Socket " + str(i) + " created."))
+                    print("[V] Socket " + str(i) + " created.")
                     sys.stdout.flush()
                 # remove time out, so socket is closed after completed message
                 sockets[i].settimeout(0)
@@ -1231,7 +1220,7 @@ def create_sockets(server, articles_to_check):
                     sys.stdout.flush()
                 time.sleep(req_wait)  # forum.NZBGet.net/viewtopic.php?t=2754
         if conn_err >= num_conn:
-            print(("[ERROR] Creation of all sockets for server " + host + " failed."))
+            print("[ERROR] Creation of all sockets for server " + host + " failed.")
     except:
         print(
             (
@@ -1246,7 +1235,7 @@ def create_sockets(server, articles_to_check):
 
 def check_failure_status(rar_msg_ids, failed_limit, nzb_age):
     """
-    Get the failed_ratio for each news server, if n th server failed_ratio
+    Get the failed_ratio for each news server, if nth server failed_ratio
     below failed_limit, return ok failure ratio for resuming
     """
     if EXTREME:
@@ -1297,12 +1286,12 @@ def check_failure_status(rar_msg_ids, failed_limit, nzb_age):
         failed_wait_count = 0
         loop_fail = False
         start_time = time.time()
-        print(("Using server: " + host))
+        print("Using server: " + host)
         sys.stdout.flush()
         # build the (non) ssl sockets per server
         (sockets, failed_sockets, conn_err) = create_sockets(server, articles_to_check)
         if conn_err >= num_conn:
-            print(("[WARNING] Skipping server: " + host))
+            print("[WARNING] Skipping server: " + host)
             num_server += 1
             failed_ratio = 100
             continue
@@ -1716,7 +1705,7 @@ def lock_file():
         fd.close()
         if VERBOSE:
             ## added for debug issue reported by blackhawkpr
-            print(("[V] server_time= " + str(server_time)))
+            print("[V] server_time= " + str(server_time))
             print("[V] New completion.lock file created.")
         return False
 
@@ -1805,7 +1794,7 @@ def get_prio_nzb(jobs, paused_jobs):
     if EXTREME:
         print("[E] get_prio_nzb(paused_jobs=")
         for job in paused_jobs:
-            print(("[E] " + str(job)))
+            print("[E] " + str(job))
     start_time = time.time()
     do_check = False
     max_queued_priority = -1.7976931348623157e308
@@ -1974,7 +1963,7 @@ def queue_call():
     queue_time = -1
     if VERBOSE:
         print("[V] queue_call()")
-    print((os.environ["NZBNA_QUEUEDFILE"]))
+    print(os.environ["NZBNA_QUEUEDFILE"])
     # check if NZB is added, otherwise it will call on each downloaded part
     event = os.environ["NZBNA_EVENT"]
     if (
@@ -2094,11 +2083,11 @@ def scan_call():
         else:  # no identical file names
             nzb_filename = nzb_filename + ".queued"
         if VERBOSE:
-            print(('[V] Expected queued file name: "' + nzb_filename + '"'))
-        print(("[NZB] NZBPR_CnpNZBFileName=" + nzb_filename))
+            print('[V] Expected queued file name: "' + nzb_filename + '"')
+        print("[NZB] NZBPR_CnpNZBFileName=" + nzb_filename)
         # pausing NZB
         if VERBOSE:
-            print(('[V] Pausing: "' + os.environ["NZBNP_NZBNAME"] + '"'))
+            print('[V] Pausing: "' + os.environ["NZBNP_NZBNAME"] + '"')
         print("[NZB] PAUSED=1")
 
 

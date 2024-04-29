@@ -31,10 +31,10 @@
         {
             "name": "MinTLSVersion",
             "displayName": "MinTLSVersion",
-            "value": "TLSv1_1",
+            "value": "TLSv1_2",
             "description": [
                 "The minimum supported SSL or TLS version.",
-                "Default = TLSv1_1."
+                "Default = TLSv1_2."
             ],
             "select": [
                 "SSLv3",
