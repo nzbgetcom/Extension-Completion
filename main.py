@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 #
 # Completion.py script for NZBGet
 #
@@ -34,17 +33,6 @@ import errno
 from xmlrpc.client import ServerProxy
 from operator import itemgetter
 
-# Check if the script is called from NZBGet 15.0 or later.
-# Extraction of server data uses .Retention, introduced in NZBGet 15
-if not "NZBOP_Server1.Retention" in os.environ:  # new variable since NZBGet 15.0
-    print(("NZBget version: " + os.environ["NZBOP_VERSION"]))
-    print("[ERROR] This script is only supported by NZBGet 15.0+, stopping")
-    sys.exit(0)
-py_ver = sys.version_info
-if py_ver < (3, 8, 0):
-    print(("Python version: " + sys.version))
-    print(("[ERROR] This script requires python 3.8.0+"))
-    sys.exit(0)
 
 # Defining constants
 AGE_LIMIT = int(os.environ.get("NZBPO_AgeLimit", 4))

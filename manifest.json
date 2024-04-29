@@ -5,6 +5,7 @@
     "kind": "SCAN/QUEUE/SCHEDULER",
     "displayName": "Completion",
     "version": "3.1",
+    "nzbgetMinVersion": "23.0",
     "author": "kloaknet",
     "license": "GPLv3",
     "about": "Verifies that enough articles are available before starting the download.",
