@@ -480,7 +480,9 @@ def is_number(s):
         return False
 
 
-def check_send_server_reply(sock, t, group, id, i, host, username, password):
+def check_send_server_reply(
+    sock, reply: str, group: str, id, i, host, username, password
+):
     """
     Check NNTP server messages, send data for next recv.
     After connecting, there will be a 200 message, after each message, a
@@ -508,7 +510,7 @@ def check_send_server_reply(sock, t, group, id, i, host, username, password):
             "[E] check_send_server_reply(sock= "
             + str(sock)
             + ", t= "
-            + str(t)
+            + reply
             + " ,group= "
             + str(group)
             + " , id= "
@@ -521,7 +523,7 @@ def check_send_server_reply(sock, t, group, id, i, host, username, password):
         id_used = False  # is id used via HEAD / STAT request to NNTP server
         msg_id_used = None
         error = False
-        server_reply = str(t[:3])  # only first 3 chars are relevant
+        server_reply = str(reply[:3])  # only first 3 chars are relevant
         # no correct NNTP server code received, most likely still propagating?
         if not is_number(server_reply):
             if VERBOSE:
@@ -531,7 +533,7 @@ def check_send_server_reply(sock, t, group, id, i, host, username, password):
                     + " "
                     + str(host)
                     + ", NNTP reply incorrect:"
-                    + str(t.split())
+                    + str(reply.split())
                 )
             server_reply = "NNTP reply incorrect."
             error = True  # pass these vars so that next article will be sent
@@ -550,7 +552,7 @@ def check_send_server_reply(sock, t, group, id, i, host, username, password):
                     + " "
                     + str(host)
                     + ", NNTP reply: "
-                    + str(t.split())
+                    + str(reply.split())
                 )
             error = True  # article is not there
         elif server_reply in ("412"):  # 412 no newsgroup has been selected
@@ -562,15 +564,13 @@ def check_send_server_reply(sock, t, group, id, i, host, username, password):
                     + " "
                     + str(host)
                     + ", NNTP reply: "
-                    + str(t.split())
+                    + str(reply.split())
                 )
-                print(
-                    "[E] Socket: " + str(i) + " " + str(host) + ", Send: " + str(text)
-                )
-            sock.send(text.encode())
+                print("[E] Socket: " + str(i) + " " + str(host) + ", Send: " + text)
+            sock.send(text.encode("utf-8"))
         elif server_reply in ("221"):
             # 221 article retrieved - head follows (reply on HEAD)
-            msg_id_used = t.split()[2][1:-1]  # get msg id to identify ok article
+            msg_id_used = reply.split()[2][1:-1]  # get msg id to identify ok article
             if EXTREME:
                 print(
                     "[E] Socket: "
@@ -578,11 +578,11 @@ def check_send_server_reply(sock, t, group, id, i, host, username, password):
                     + " "
                     + str(host)
                     + ", NNTP reply: "
-                    + str(t.split())
+                    + str(reply.split())
                 )
         elif server_reply in ("223"):
             # 223 article retrieved - request text separately (reply on STAT)
-            msg_id_used = t.split()[2][1:-1]  # get msg id to identify ok article
+            msg_id_used = reply.split()[2][1:-1]  # get msg id to identify ok article
             if EXTREME:
                 print(
                     "[E] Socket: "
@@ -590,7 +590,7 @@ def check_send_server_reply(sock, t, group, id, i, host, username, password):
                     + " "
                     + str(host)
                     + ", NNTP reply: "
-                    + str(t.split())
+                    + str(reply.split())
                 )
         elif server_reply in ("200", "201"):
             # 200 service available, posting permitted
@@ -602,14 +602,14 @@ def check_send_server_reply(sock, t, group, id, i, host, username, password):
                     + " "
                     + str(host)
                     + ", NNTP reply: "
-                    + str(t.split())
+                    + str(reply.split())
                 )
             text = CHECK_METHOD + " <" + id + ">\r\n"  # STAT is faster than HEAD
             if EXTREME:
                 print(
                     "[E] Socket: " + str(i) + " " + str(host) + ", Send: " + str(text)
                 )
-            sock.send(text.encode())
+            sock.send(text.encode("utf-8"))
         elif server_reply in ("381"):  # 381 Password required
             text = "AUTHINFO PASS %s\r\n" % (password)
             if EXTREME:
@@ -619,12 +619,12 @@ def check_send_server_reply(sock, t, group, id, i, host, username, password):
                     + " "
                     + str(host)
                     + ", NNTP reply: "
-                    + str(t.split())
+                    + str(reply.split())
                 )
                 print(
                     "[E] Socket: " + str(i) + " " + str(host) + ", Send: " + str(text)
                 )
-            sock.send(text.encode())
+            sock.send(text.encode("utf-8"))
         elif server_reply in ("281"):  # 281 Authentication accepted
             if EXTREME:
                 print(
@@ -633,7 +633,7 @@ def check_send_server_reply(sock, t, group, id, i, host, username, password):
                     + " "
                     + str(host)
                     + ", NNTP reply: "
-                    + str(t.split())
+                    + str(reply.split())
                 )
         elif server_reply in ("211"):  # 211 group selected (group)
             if EXTREME:
@@ -643,7 +643,7 @@ def check_send_server_reply(sock, t, group, id, i, host, username, password):
                     + " "
                     + str(host)
                     + ", NNTP reply: "
-                    + str(t.split())
+                    + str(reply.split())
                 )
         elif server_reply in ("480"):  # 480 AUTHINFO required
             text = "AUTHINFO USER %s\r\n" % (username)
@@ -654,12 +654,12 @@ def check_send_server_reply(sock, t, group, id, i, host, username, password):
                     + " "
                     + str(host)
                     + ", NNTP reply: "
-                    + str(t.split())
+                    + str(reply.split())
                 )
                 print(
                     "[E] Socket: " + str(i) + " " + str(host) + ", Send: " + str(text)
                 )
-            sock.send(text.encode())
+            sock.send(text.encode("utf-8"))
         elif str(server_reply[:2]) in ("48", "50"):
             # 48X or 50X incorrect news server account settings
             print(
@@ -668,7 +668,7 @@ def check_send_server_reply(sock, t, group, id, i, host, username, password):
                 + " "
                 + str(host)
                 + ", Incorrect news server account settings: "
-                + str(t)
+                + reply
             )
         elif server_reply in ("205"):  # NNTP Service exits normally
             sock.close()
@@ -679,7 +679,7 @@ def check_send_server_reply(sock, t, group, id, i, host, username, password):
                     + " "
                     + str(host)
                     + ", NNTP reply: "
-                    + str(t.split())
+                    + str(reply.split())
                 )
             if VERBOSE:
                 print("[V] Socket " + str(i) + " closed.")
@@ -691,7 +691,7 @@ def check_send_server_reply(sock, t, group, id, i, host, username, password):
                     + " "
                     + str(host)
                     + ", NNTP reply: "
-                    + str(t.split())
+                    + str(reply.split())
                 )
             error = True  # article is assumed to be not there
             id_used = True
@@ -703,7 +703,7 @@ def check_send_server_reply(sock, t, group, id, i, host, username, password):
                     + " "
                     + str(host)
                     + ", Not covered NNTP server reply code: "
-                    + str(t.split())
+                    + str(reply.split())
                 )
         if VERBOSE or EXTREME:
             sys.stdout.flush()
@@ -724,10 +724,10 @@ def check_send_server_reply(sock, t, group, id, i, host, username, password):
                 print(
                     "[E] Socket: " + str(i) + " " + str(host) + ", Send: " + str(text)
                 )
-            sock.send(text.encode())
+            sock.send(text.encode("utf-8"))
         elif end_loop and server_reply not in ("205"):
             text = "QUIT\r\n"
-            sock.send(text.encode())
+            sock.send(text.encode("utf-8"))
             if EXTREME:
                 print(
                     "[E] Socket: " + str(i) + " " + str(host) + ", Send: " + str(text)
@@ -1322,9 +1322,7 @@ def check_failure_status(rar_msg_ids, failed_limit, nzb_age):
                                 + " marking requested article as failed."
                             )
                             sys.stdout.flush()
-                        reply = "999 Article marked as failed by script.".encode(
-                            encoding="utf-8"
-                        )
+                        reply = "999 Article marked as failed by script."
                         failed_wait_count += 1
                         if failed_wait_count >= 20:
                             print(
@@ -1381,7 +1379,7 @@ def check_failure_status(rar_msg_ids, failed_limit, nzb_age):
                         # ID of missing article is not returned by server
                         failed_articles += 1
                     # found ok article on server, store success:
-                    if id_used and not error and server_reply == "223".encode():
+                    if id_used and not error and server_reply == "223":
                         # find row index for successfully send article
                         # (with reply)
                         for j, rar_msg_id in enumerate(rar_msg_ids):
@@ -1415,10 +1413,9 @@ def check_failure_status(rar_msg_ids, failed_limit, nzb_age):
         m = socket_list.index(i)
         for k in range(0, 8):  # loop multiple so all data will be received
             for i in socket_list[m:]:  # loop through ok sockets
-                reply = None
+                reply = ""
                 try:
                     data = sockets[i].recv(chunk)
-                    reply = ""
                     while data:
                         reply += data.decode("utf-8")
                         data = sockets[i].recv(chunk)
@@ -1476,13 +1473,20 @@ def check_failure_status(rar_msg_ids, failed_limit, nzb_age):
                                 + " marking request as failed."
                             )
                             sys.stdout.flush()
-                        reply = "999 request marked as failed by script.".encode()
+                        reply = "999 request marked as failed by script."
                         pass
                 if reply != None:
                     socket_loop_count[i] = 0
                     (error, id_used, server_reply, msg_id_used) = (
                         check_send_server_reply(
-                            sockets[i], reply, group, id, i, host, username, password
+                            sockets[i],
+                            reply,
+                            group,
+                            id,
+                            i,
+                            host,
+                            username,
+                            password,
                         )
                     )
                     if error and server_reply in ("411", "420", "423", "430"):
@@ -1496,7 +1500,7 @@ def check_failure_status(rar_msg_ids, failed_limit, nzb_age):
                                 + " failed."
                             )
                     # found ok article on server, store success:
-                    elif not error and server_reply == "223".encode():
+                    elif not error and server_reply == "223":
                         # find row index for successfully send article
                         # (with recv reply)
                         for j, rar_msg_id in enumerate(rar_msg_ids):
@@ -1511,7 +1515,7 @@ def check_failure_status(rar_msg_ids, failed_limit, nzb_age):
                                 + str(failed_articles)
                                 + " failed."
                             )
-                    elif not error and server_reply == "205".encode(encoding="utf-8"):
+                    elif not error and server_reply == "205":
                         # socket closed in check_send_server_reply
                         socket_list.remove(i)
                 if failed_ratio != 100:
