@@ -30,8 +30,11 @@ import ssl
 import traceback
 import html.parser
 import errno
+from typing import Tuple
 from xmlrpc.client import ServerProxy
 from operator import itemgetter
+
+sys.stdout.reconfigure(encoding="utf-8")
 
 
 # Defining constants
@@ -75,18 +78,16 @@ USERNAME = os.environ["NZBOP_CONTROLUSERNAME"]  # NZBGet username
 PASSWORD = os.environ["NZBOP_CONTROLPASSWORD"]  # NZBGet password
 
 
-def get_min_tls_version(min_ver):
-    if min_ver == "SSLv3":
-        return ssl.TLSVersion.SSLv3
-    if min_ver == "TLSv1":
+def get_min_tls_version(ver):
+    if ver == "TLSv1":
         return ssl.TLSVersion.TLSv1
-    if min_ver == "TLSv1_1":
+    if ver == "TLSv1_1":
         return ssl.TLSVersion.TLSv1_1
-    if min_ver == "TLSv1_2":
+    if ver == "TLSv1_2":
         return ssl.TLSVersion.TLSv1_2
-    if min_ver == "TLSv1_3":
+    if ver == "TLSv1_3":
         return ssl.TLSVersion.TLSv1_3
-    return ssl.TLSVersion.TLSv1
+    return ssl.TLSVersion.TLSv1_2
 
 
 def unpause_nzb(nzb_id):
@@ -218,12 +219,12 @@ def call_nzbget_direct(url_command):
     http_url = "http://%s:%s/jsonrpc/%s" % (HOST, PORT, url_command)
     request = urllib.request.Request(http_url)
     base_64_string = (
-        base64.b64encode(("%s:%s" % (USERNAME, PASSWORD)).encode()).decode().strip()
+        base64.b64encode(("%s:%s" % (USERNAME, PASSWORD)).encode("utf-8")).decode("utf-8").strip()
     )
     request.add_header("Authorization", "Basic %s" % base_64_string)
     response = urllib.request.urlopen(request)  # get some data from NZBGet
     # data is a JSON raw-string, contains ALL properties each NZB in queue
-    data = response.read()
+    data = response.read().decode('utf-8')
     return data
 
 
@@ -249,7 +250,7 @@ def get_nzb_status(nzb):
         print("[V] get_nzb_status(nzb=" + str(nzb) + ")")
     print('Checking: "' + nzb[1] + '"')
     # collect rar msg ids that need to be checked
-    rar_msg_ids = get_nzb_data(os.environ["NZBOP_NZBDIR"] + os.sep + nzb[1])
+    rar_msg_ids = get_nzb_data(nzb[1])
     if rar_msg_ids == -1:  # no such NZB file
         succes = True  # file send back to queue
         print(
@@ -776,7 +777,7 @@ def get_nzb_data(fname):
         sys.stdout.flush()
     if os.path.isfile(fname):
         file_exists = True
-        fd = open(fname)
+        fd = open(fname, encoding="utf-8")
         lines = fd.readlines()
         fd.close()
         if len(lines) == 1:  # single line NZB
@@ -1040,7 +1041,7 @@ def get_server_settings(nzb_age):
     return servers
 
 
-def create_sockets(server, articles_to_check):
+def create_sockets(server, articles_to_check) -> Tuple[list[ssl.SSLSocket], list[int], int]:
     """
     create the sockets for the server that will be used to send in
     check_send_server_reply() and receive in check_failure_status()
@@ -1074,7 +1075,7 @@ def create_sockets(server, articles_to_check):
                 + str(end_sock)
                 + " to keep the number of sockets below the number of articles"
             )
-    sockets = [None] * num_conn
+    sockets = [ssl.SSLSocket] * num_conn
     failed_sockets = [-1] * num_conn
     if VERBOSE:
         print("[V] Creating sockets for server: " + host)
@@ -1098,7 +1099,10 @@ def create_sockets(server, articles_to_check):
         # create connections
         if encryption:
             context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+            context.verify_mode = ssl.CERT_REQUIRED
+            context.check_hostname = True
             context.minimum_version = get_min_tls_version(MIN_TLS_VERSION)
+            context.load_default_certs()
 
             for i in range(start_sock, end_sock):
                 s = socket.socket(af, socket.SOCK_STREAM)
@@ -1111,7 +1115,7 @@ def create_sockets(server, articles_to_check):
             # set timeout for trying to connect (e.g. wrong port config)
             sockets[i].settimeout(NNTP_TIME_OUT)
             try:
-                sockets[i].connect(host, port)
+                sockets[i].connect((host, port))
                 if VERBOSE:
                     print("[V] Socket " + str(i) + " created.")
                     sys.stdout.flush()
@@ -1156,7 +1160,7 @@ def create_sockets(server, articles_to_check):
                 + str(sys.exc_info()[1])
             )
         )
-    return sockets, failed_sockets, conn_err
+    return (sockets, failed_sockets, conn_err)
 
 
 def check_failure_status(rar_msg_ids, failed_limit, nzb_age):
@@ -1249,7 +1253,13 @@ def check_failure_status(rar_msg_ids, failed_limit, nzb_age):
                 if send_articles > articles_to_check - 1:
                     break
                 try:
-                    reply = sockets[i].recv(4096)
+                    
+                    data = sockets[i].recv(4096)
+                    reply = data.read().decode("utf-8")
+                    print('DETAIL ___REPLY___', str(reply))
+                    while data:
+                        data = sockets[i].recv(4096)
+                        reply += data.read().decode("utf-8")
                 except:  # each error would trigger the same effect
                     # avoid continuous looping on fast machines by adding delays
                     #            EAGAIN, EWOULDBLOCK, ssl.SSLWantReadError
@@ -1309,7 +1319,7 @@ def check_failure_status(rar_msg_ids, failed_limit, nzb_age):
                                 + " marking requested article as failed."
                             )
                             sys.stdout.flush()
-                        reply = "999 Article marked as failed by script.".encode()
+                        reply = "999 Article marked as failed by script.".encode(encoding="utf-8")
                         failed_wait_count += 1
                         if failed_wait_count >= 20:
                             print(
@@ -1402,8 +1412,12 @@ def check_failure_status(rar_msg_ids, failed_limit, nzb_age):
             for i in socket_list[m:]:  # loop through ok sockets
                 reply = None
                 try:
-                    reply = sockets[i].recv(4096)
-                    # if no error, last article for this socket received
+                    data = sockets[i].recv(4096)
+                    reply = data.read().decode("utf-8")
+                    print('DETAIL ___REPLY___', str(reply))
+                    while data:
+                        data = sockets[i].recv(4096)
+                        reply += data.read().decode("utf-8")
                 except:  # managing all socket errors
                     err = sys.exc_info()
                     if socket_loop_count[i] < 5:
@@ -1493,7 +1507,7 @@ def check_failure_status(rar_msg_ids, failed_limit, nzb_age):
                                 + str(failed_articles)
                                 + " failed."
                             )
-                    elif not error and server_reply == "205".encode():
+                    elif not error and server_reply == "205".encode(encoding="utf-8"):
                         # socket closed in check_send_server_reply
                         socket_list.remove(i)
                 if failed_ratio != 100:
@@ -1549,7 +1563,7 @@ def lock_file():
     f_name = tmp_path + os.sep + "completion.lock"
     file_exists = os.path.isfile(f_name)
     if file_exists:
-        fd = open(f_name)
+        fd = open(f_name, encoding="utf-8")
         time_stamp = int(fd.readline())
         if VERBOSE:
             print(
@@ -1559,7 +1573,7 @@ def lock_file():
         # Check if the .lock file was created before or after the last restart
         if server_time - up_time > time_stamp:
             # .lock created before restart, overwrite .lock file time_stamp
-            fd = open(f_name, "w")
+            fd = open(f_name, encoding="utf-8", mode="w")
             fd.write(str(server_time))
             fd.close()
             if VERBOSE:
@@ -1574,7 +1588,7 @@ def lock_file():
                 + "http://forum.NZBGet.net/viewtopic.php?f=8&t=1736"
             )
             # overwrite .lock file time_stamp
-            fd = open(f_name, "w")
+            fd = open(f_name, encoding="utf-8", mode="w")
             fd.write(str(server_time))
             fd.close()
             if VERBOSE:
@@ -1588,7 +1602,7 @@ def lock_file():
                 print("[V] Script is already running, check canceled.")
             return True
     else:
-        fd = open(f_name, "w")
+        fd = open(f_name, encoding="utf-8", mode="w")
         fd.write(str(server_time))
         fd.close()
         if VERBOSE:
@@ -1983,7 +1997,7 @@ def write_to_file(input):
         else:
             raise
     f_name = tmp_path + os.sep + "log.txt"
-    fd = open(f_name, "a")
+    fd = open(f_name, encoding="utf-8", mode="a")
     fd.write(str(input) + "\n\n")
     fd.close()
 
