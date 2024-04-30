@@ -219,12 +219,14 @@ def call_nzbget_direct(url_command):
     http_url = "http://%s:%s/jsonrpc/%s" % (HOST, PORT, url_command)
     request = urllib.request.Request(http_url)
     base_64_string = (
-        base64.b64encode(("%s:%s" % (USERNAME, PASSWORD)).encode("utf-8")).decode("utf-8").strip()
+        base64.b64encode(("%s:%s" % (USERNAME, PASSWORD)).encode("utf-8"))
+        .decode("utf-8")
+        .strip()
     )
     request.add_header("Authorization", "Basic %s" % base_64_string)
     response = urllib.request.urlopen(request)  # get some data from NZBGet
     # data is a JSON raw-string, contains ALL properties each NZB in queue
-    data = response.read().decode('utf-8')
+    data = response.read().decode("utf-8")
     return data
 
 
@@ -1041,7 +1043,9 @@ def get_server_settings(nzb_age):
     return servers
 
 
-def create_sockets(server, articles_to_check) -> Tuple[list[ssl.SSLSocket], list[int], int]:
+def create_sockets(
+    server, articles_to_check
+) -> Tuple[list[ssl.SSLSocket], list[int], int]:
     """
     create the sockets for the server that will be used to send in
     check_send_server_reply() and receive in check_failure_status()
@@ -1213,6 +1217,7 @@ def check_failure_status(rar_msg_ids, failed_limit, nzb_age):
         socket_loop_count = [-1] * num_conn
         failed_wait_count = 0
         loop_fail = False
+        chunk = 4096
         start_time = time.time()
         print("Using server: " + host)
         sys.stdout.flush()
@@ -1253,13 +1258,11 @@ def check_failure_status(rar_msg_ids, failed_limit, nzb_age):
                 if send_articles > articles_to_check - 1:
                     break
                 try:
-                    
-                    data = sockets[i].recv(4096)
-                    reply = data.read().decode("utf-8")
-                    print('DETAIL ___REPLY___', str(reply))
+                    data = sockets[i].recv(chunk)
+                    reply = ""
                     while data:
-                        data = sockets[i].recv(4096)
-                        reply += data.read().decode("utf-8")
+                        reply += data.decode("utf-8")
+                        data = sockets[i].recv(chunk)
                 except:  # each error would trigger the same effect
                     # avoid continuous looping on fast machines by adding delays
                     #            EAGAIN, EWOULDBLOCK, ssl.SSLWantReadError
@@ -1319,7 +1322,9 @@ def check_failure_status(rar_msg_ids, failed_limit, nzb_age):
                                 + " marking requested article as failed."
                             )
                             sys.stdout.flush()
-                        reply = "999 Article marked as failed by script.".encode(encoding="utf-8")
+                        reply = "999 Article marked as failed by script.".encode(
+                            encoding="utf-8"
+                        )
                         failed_wait_count += 1
                         if failed_wait_count >= 20:
                             print(
@@ -1412,12 +1417,11 @@ def check_failure_status(rar_msg_ids, failed_limit, nzb_age):
             for i in socket_list[m:]:  # loop through ok sockets
                 reply = None
                 try:
-                    data = sockets[i].recv(4096)
-                    reply = data.read().decode("utf-8")
-                    print('DETAIL ___REPLY___', str(reply))
+                    data = sockets[i].recv(chunk)
+                    reply = ""
                     while data:
-                        data = sockets[i].recv(4096)
-                        reply += data.read().decode("utf-8")
+                        reply += data.decode("utf-8")
+                        data = sockets[i].recv(chunk)
                 except:  # managing all socket errors
                     err = sys.exc_info()
                     if socket_loop_count[i] < 5:
