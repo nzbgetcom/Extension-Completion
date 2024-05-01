@@ -404,9 +404,7 @@ def get_dupe_nzb_status(nzb):
                 + str(num_duplicates)
                 + "]"
             )
-            rar_msg_ids = get_nzb_data(
-                os.environ["NZBOP_NZBDIR"] + os.sep + nzb_filename
-            )
+            rar_msg_ids = get_nzb_data(nzb[1])
             if rar_msg_ids == -1:  # no such NZB file
                 success = False  # file marked BAD
                 if VERBOSE:
