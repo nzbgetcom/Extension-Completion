@@ -30,7 +30,6 @@ import ssl
 import traceback
 import html.parser
 import errno
-from typing import Tuple
 from xmlrpc.client import ServerProxy
 from operator import itemgetter
 
@@ -1042,9 +1041,7 @@ def get_server_settings(nzb_age):
     return servers
 
 
-def create_sockets(
-    server, articles_to_check
-) -> Tuple[list[ssl.SSLSocket], list[int], int]:
+def create_sockets(server, articles_to_check):
     """
     create the sockets for the server that will be used to send in
     check_send_server_reply() and receive in check_failure_status()
