@@ -20,23 +20,56 @@ import json
 import threading
 import unittest
 import sys
-import ssl
-import socket
 from os.path import dirname
 import os
 import subprocess
-from xmlrpc.server import XMLRPCDocGenerator
+import xmlrpc.server
+import xml.etree.cElementTree as ET
+import shutil
 
 SUCCESS = 93
 NONE = 95
 ERROR = 94
 
 ROOT = dirname(__file__)
-TMP_DIR = ROOT.join("tmp")
+TMP_DIR = ROOT + os.sep + "tmp"
+TEST_DATA_DIR = ROOT + os.sep + "test_data"
 HOST = "127.0.0.1"
 USERNAME = "TestUser"
 PASSWORD = "TestPassword"
 PORT = "6789"
+
+
+def clean_up():
+    if os.path.exists(TMP_DIR):
+        shutil.rmtree(TMP_DIR)
+
+
+def parse_member(member):
+    name = member.find("name").text
+    value_elem = member.find("value")
+
+    if value_elem.find("i4") is not None:
+        value = int(value_elem.find("i4").text)
+    elif value_elem.find("boolean") is not None:
+        value = value_elem.find("boolean").text == "true"
+    elif value_elem.find("array") is not None:
+        value = parse_array(value_elem.find("array"))
+
+    return name, value
+
+
+def parse_array(array_elem):
+    array_data = {}
+    for member in array_elem.find("data").findall("member"):
+        name = member.find("name").text
+        value_elem = member.find("value")
+        if value_elem.find("i4") is not None:
+            value = int(value_elem.find("i4").text)
+        elif value_elem.find("boolean") is not None:
+            value = value_elem.find("boolean").text == "true"
+        array_data[name] = value
+    return array_data
 
 
 class NZBGetServer(http.server.BaseHTTPRequestHandler):
@@ -44,19 +77,32 @@ class NZBGetServer(http.server.BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header("Content-Type", "application/json")
         self.end_headers()
-        formatted = json.dumps("{}", separators=(",\n", " : "), indent=0)
+        f = open(TEST_DATA_DIR + "/listgroups_resp.json")
+        data = json.load(f)
+        formatted = json.dumps(data, separators=(",\n", " : "), indent=0)
         self.wfile.write(formatted.encode("utf-8"))
+        f.close()
 
     def do_POST(self):
         self.log_request()
         self.send_response(200)
         self.send_header("Content-Type", "text/xml")
         self.end_headers()
-        data = '<?xml version="1.0" encoding="UTF-8"?><nzb></nzb>'
-        response = XMLRPCDocGenerator.client.dumps(
-            (data,), allow_none=False, encoding=None
-        )
-        self.wfile.write(response.encode("utf-8"))
+        with open(TEST_DATA_DIR + "/status_resp.xml", "r") as f:
+            data = f.read().replace("\n", "").strip()
+            root = ET.fromstring(data)
+            response_dict = {}
+            for member in root.findall("member"):
+                name, value = parse_member(member)
+                response_dict[name] = value
+
+            # Serialize Python object to XML-RPC response
+            response = xmlrpc.client.dumps(
+                (response_dict,), allow_none=False, encoding=None
+            )
+
+            # Send the serialized response to the client
+            self.wfile.write(response.encode("utf-8"))
 
 
 def get_python():
@@ -86,11 +132,12 @@ def set_defaults_env():
     os.environ["NZBOP_CONTROLUSERNAME"] = USERNAME
     os.environ["NZBOP_CONTROLPASSWORD"] = PASSWORD
     os.environ["NZBOP_TEMPDIR"] = TMP_DIR
+    os.environ["NZBNA_QUEUEDFILE"] = "nzb_filename"
 
 
 class Tests(unittest.TestCase):
 
-    def test_in_scheduler_mode(self):
+    def test_scheduler_mode(self):
         set_defaults_env()
         os.environ["NZBSP_TASKID"] = "ID"
         server = http.server.HTTPServer((HOST, int(PORT)), NZBGetServer)
@@ -100,7 +147,43 @@ class Tests(unittest.TestCase):
         server.shutdown()
         server.server_close()
         thread.join()
-        self.assertEqual(code, SUCCESS)
+        del os.environ["NZBSP_TASKID"]
+        clean_up()
+        self.assertEqual(code, 0)
+
+    def test_queue_mode(self):
+        set_defaults_env()
+        os.environ["NZBNA_NZBNAME"] = "nzb_filename"
+        os.environ["NZBNA_EVENT"] = "NZB_DOWNLOADED"
+        os.environ["NZBNA_QUEUEDFILE"] = "nzb_filename.queued"
+        server = http.server.HTTPServer((HOST, int(PORT)), NZBGetServer)
+        thread = threading.Thread(target=server.serve_forever)
+        thread.start()
+        [out, code, err] = run_script()
+        server.shutdown()
+        server.server_close()
+        thread.join()
+        del os.environ["NZBNA_NZBNAME"]
+        del os.environ["NZBNA_EVENT"]
+        del os.environ["NZBNA_QUEUEDFILE"]
+        self.assertEqual(code, 0)
+
+    def test_scan_mode(self):
+        set_defaults_env()
+        os.environ["NZBNP_NZBNAME"] = "nzb_filename"
+        os.environ["NZBNP_CATEGORY"] = "Movies"
+        os.environ["NZBNP_FILENAME"] = "nzb_filename.queued"
+        os.environ["NZBOP_NZBDIR"] = TEST_DATA_DIR
+        server = http.server.HTTPServer((HOST, int(PORT)), NZBGetServer)
+        thread = threading.Thread(target=server.serve_forever)
+        thread.start()
+        [out, code, err] = run_script()
+        server.shutdown()
+        server.server_close()
+        thread.join()
+        del os.environ["NZBNP_NZBNAME"]
+        del os.environ["NZBNP_CATEGORY"]
+        self.assertEqual(code, 0)
 
     def test_manifest(self):
         with open(ROOT + "/manifest.json", encoding="utf-8") as file:

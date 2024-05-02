@@ -1,0 +1,83 @@
+{
+    "version": "1.1",
+    "result": [
+        {
+            "FirstID": 39,
+            "LastID": 39,
+            "RemainingSizeLo": 1732652478,
+            "RemainingSizeHi": 0,
+            "RemainingSizeMB": 1652,
+            "PausedSizeLo": 1732652478,
+            "PausedSizeHi": 0,
+            "PausedSizeMB": 1652,
+            "RemainingFileCount": 41,
+            "RemainingParCount": 10,
+            "MinPriority": 0,
+            "MaxPriority": 0,
+            "ActiveDownloads": 0,
+            "Status": "PAUSED",
+            "NZBID": 39,
+            "NZBName": "bad",
+            "NZBNicename": "bad",
+            "Kind": "NZB",
+            "URL": "",
+            "NZBFilename": "bad.nzb",
+            "DestDir": "C:\\ProgramData\\NZBGet\\intermediate\\bad.#39",
+            "FinalDir": "",
+            "Category": "",
+            "ParStatus": "NONE",
+            "ExParStatus": "NONE",
+            "UnpackStatus": "NONE",
+            "MoveStatus": "NONE",
+            "ScriptStatus": "NONE",
+            "DeleteStatus": "NONE",
+            "MarkStatus": "NONE",
+            "UrlStatus": "NONE",
+            "FileSizeLo": 1732652478,
+            "FileSizeHi": 0,
+            "FileSizeMB": 1652,
+            "FileCount": 41,
+            "MinPostTime": 1294832829,
+            "MaxPostTime": 1294832829,
+            "TotalArticles": 4380,
+            "SuccessArticles": 0,
+            "FailedArticles": 0,
+            "Health": 1000,
+            "CriticalHealth": 894,
+            "DupeKey": "",
+            "DupeScore": 0,
+            "DupeMode": "SCORE",
+            "Deleted": false,
+            "DownloadedSizeLo": 0,
+            "DownloadedSizeHi": 0,
+            "DownloadedSizeMB": 0,
+            "DownloadTimeSec": 0,
+            "PostTotalTimeSec": 0,
+            "ParTimeSec": 0,
+            "RepairTimeSec": 0,
+            "UnpackTimeSec": 0,
+            "MessageCount": 3,
+            "ExtraParBlocks": 0,
+            "Parameters": [
+            {
+                "Name": "*Unpack:",
+                "Value": "yes"
+            },
+            {
+                "Name": "Completion:",
+                "Value": "yes"
+            },
+            {
+                "Name": "CnpNZBFileName",
+                "Value": "C:\\ProgramData\\NZBGet\\nzb\\bad.nzb.queued"
+            }
+            ],
+            "ScriptStatuses": [],
+            "ServerStats": [],
+            "PostInfoText": "NONE",
+            "PostStageProgress": 71727040,
+            "PostStageTimeSec": 0,
+            "Log": []
+        }
+    ]
+}
