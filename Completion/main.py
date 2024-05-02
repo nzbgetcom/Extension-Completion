@@ -228,9 +228,14 @@ def call_nzbget_direct(url_command):
     return data
 
 
-def get_nzb_filename():
-    return os.environ.get("NZBPR_CNPNZBFILENAME")
-
+def get_nzb_filename(parameters):
+    """
+    get the real nzb_filename from the added parameter CnpNZBFileName
+    """
+    for p in parameters:
+        if p["Name"] == "CnpNZBFileName":
+            break
+    return p["Value"]
 
 
 def get_nzb_status(nzb):
@@ -245,7 +250,7 @@ def get_nzb_status(nzb):
         print("[V] get_nzb_status(nzb=" + str(nzb) + ")")
     print('Checking: "' + nzb[1] + '"')
     # collect rar msg ids that need to be checked
-    rar_msg_ids = get_nzb_data(nzb[1])
+    rar_msg_ids = get_nzb_data(os.environ['NZBOP_NZBDIR'] + os.sep + nzb[1])
     if rar_msg_ids == -1:  # no such NZB file
         succes = True  # file send back to queue
         print(
@@ -387,7 +392,7 @@ def get_dupe_nzb_status(nzb):
         for job in sorted_duplicates:
             i += 1
             nzb_id = job["NZBID"]
-            nzb_filename = get_nzb_filename()
+            nzb_filename = job["NZBFilename"]
             nzb_age = job["MaxPostTime"]  # nzb age
             nzb_critical_health = job["CriticalHealth"]
             print(
@@ -399,7 +404,7 @@ def get_dupe_nzb_status(nzb):
                 + str(num_duplicates)
                 + "]"
             )
-            rar_msg_ids = get_nzb_data(nzb[1])
+            rar_msg_ids = get_nzb_data(os.environ['NZBOP_NZBDIR'] + os.sep + nzb[1])
             if rar_msg_ids == -1:  # no such NZB file
                 success = False  # file marked BAD
                 if VERBOSE:
@@ -1727,7 +1732,7 @@ def get_prio_nzb(jobs, paused_jobs):
         if VERBOSE:
             print("[V] Paused UNSORTED NZBs in queue that will be processed:")
             for job in paused_jobs:
-                nzb_filename = get_nzb_filename()
+                nzb_filename = job["NZBFilename"]
                 print(
                     "[V] * "
                     + str(nzb_filename)
@@ -1760,9 +1765,10 @@ def get_prio_nzb(jobs, paused_jobs):
         if VERBOSE:
             print("[V] Paused and SORTED NZBs in queue that will be processed:")
             for job in jobs_sorted:
-                nzb_filename = get_nzb_filename()
+                nzb_filename = get_nzb_filename(job["Parameters"])
                 print(
                     "[V] * "
+                    + str(job["Parameters"])
                     + str(nzb_filename)
                     + ", Age: "
                     + str(round((int(time.time()) - job["MaxPostTime"]) / 3600.0, 1))
@@ -1770,7 +1776,7 @@ def get_prio_nzb(jobs, paused_jobs):
                     + str(job["MaxPriority"])
                 )
         for job in jobs_sorted:
-            nzb_filename = get_nzb_filename()
+            nzb_filename = job["NZBFilename"]
             nzb_id = job["NZBID"]
             nzb_age = job["MaxPostTime"]  # nzb age
             nzb_critical_health = job["CriticalHealth"]
