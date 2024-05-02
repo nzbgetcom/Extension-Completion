@@ -229,7 +229,7 @@ def call_nzbget_direct(url_command):
 
 
 def get_nzb_filename():
-    return os.environ.get("NZBPR_CNPNZBFILENAME")
+    return os.environ.get("NZBNA_QUEUEDFILE")
 
 
 
