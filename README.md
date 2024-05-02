@@ -3,7 +3,7 @@ If you need support for Python 2.x versions then you can get legacy version v1.1
 
 ## NZBGet Versions
 
-- stable v23+ [v3.1](https://github.com/nzbgetcom/Extension-Completion/releases/tag/v1.0)
+- stable v23+ [v3.1](https://github.com/nzbgetcom/Extension-Completion/releases/tag/v3.1)
 - legacy v22 [v2.0](https://github.com/nzbgetcom/Extension-Completion/releases/tag/v2.0)
 
 # Completion

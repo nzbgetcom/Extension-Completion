@@ -76,18 +76,6 @@ USERNAME = os.environ["NZBOP_CONTROLUSERNAME"]  # NZBGet username
 PASSWORD = os.environ["NZBOP_CONTROLPASSWORD"]  # NZBGet password
 
 
-def get_min_tls_version(ver):
-    if ver == "TLSv1":
-        return ssl.TLSVersion.TLSv1
-    if ver == "TLSv1_1":
-        return ssl.TLSVersion.TLSv1_1
-    if ver == "TLSv1_2":
-        return ssl.TLSVersion.TLSv1_2
-    if ver == "TLSv1_3":
-        return ssl.TLSVersion.TLSv1_3
-    return ssl.TLSVersion.TLSv1_2
-
-
 def unpause_nzb(nzb_id):
     """
     resume the nzb with NZBid in the NZBGet queue via RPC-API
@@ -230,7 +218,6 @@ def call_nzbget_direct(url_command):
 
 def get_nzb_filename():
     return os.environ.get("NZBNA_QUEUEDFILE")
-
 
 
 def get_nzb_status(nzb):
@@ -1141,7 +1128,9 @@ def create_sockets(server, articles_to_check):
                         + "while NZBGet closes its news server connections."
                     )
                     sys.stdout.flush()
-                time.sleep(req_wait)  # forum.NZBGet.net/viewtopic.php?t=2754
+                time.sleep(
+                    req_wait
+                )  # NZBGet sends QUIT after 5 seconds of innactivity (of a particular connection).
         if conn_err >= num_conn:
             print("[ERROR] Creation of all sockets for server " + host + " failed.")
     except:
@@ -1575,7 +1564,7 @@ def lock_file():
                 "[ERROR] Script seems to be running for more than 30 "
                 + "minutes and has most likely crashed. Check your logs and "
                 "report the log and errors at "
-                + "http://forum.NZBGet.net/viewtopic.php?f=8&t=1736"
+                + "https://github.com/nzbgetcom/Extension-Completion/issues"
             )
             # overwrite .lock file time_stamp
             fd = open(f_name, encoding="utf-8", mode="w")
@@ -1653,7 +1642,9 @@ def nzbget_paused():
                         + "server connections."
                     )
                     sys.stdout.flush()
-                time.sleep(5)  # forum.NZBGet.net/viewtopic.php?t=2754
+                time.sleep(
+                    5
+                )  # NZBGet sends QUIT after 5 seconds of innactivity (of a particular connection).
         if VERBOSE:
             print("[V] Downloading for NZBGet paused")
             sys.stdout.flush()
