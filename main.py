@@ -216,8 +216,18 @@ def call_nzbget_direct(url_command):
     return data
 
 
-def get_nzb_filename():
-    return os.environ.get("NZBNA_QUEUEDFILE")
+def get_nzb_filename(parameters):
+    """
+    get the real nzb_filename from the added parameter CnpNZBFileName or from env
+    """
+    file_name = os.environ.get("NZBNA_QUEUEDFILE")
+    if file_name:
+        return file_name
+
+    for p in parameters:
+        if p["Name"] == "CnpNZBFileName":
+            break
+    return p["Value"]
 
 
 def get_nzb_status(nzb):
@@ -374,7 +384,7 @@ def get_dupe_nzb_status(nzb):
         for job in sorted_duplicates:
             i += 1
             nzb_id = job["NZBID"]
-            nzb_filename = get_nzb_filename()
+            nzb_filename = get_nzb_filename(job["Parameters"])
             nzb_age = job["MaxPostTime"]  # nzb age
             nzb_critical_health = job["CriticalHealth"]
             print(
@@ -1718,7 +1728,7 @@ def get_prio_nzb(jobs, paused_jobs):
         if VERBOSE:
             print("[V] Paused UNSORTED NZBs in queue that will be processed:")
             for job in paused_jobs:
-                nzb_filename = get_nzb_filename()
+                nzb_filename = get_nzb_filename(job["Parameters"])
                 print(
                     "[V] * "
                     + str(nzb_filename)
@@ -1751,7 +1761,7 @@ def get_prio_nzb(jobs, paused_jobs):
         if VERBOSE:
             print("[V] Paused and SORTED NZBs in queue that will be processed:")
             for job in jobs_sorted:
-                nzb_filename = get_nzb_filename()
+                nzb_filename = get_nzb_filename(job["Parameters"])
                 print(
                     "[V] * "
                     + str(nzb_filename)
@@ -1761,7 +1771,7 @@ def get_prio_nzb(jobs, paused_jobs):
                     + str(job["MaxPriority"])
                 )
         for job in jobs_sorted:
-            nzb_filename = get_nzb_filename()
+            nzb_filename = get_nzb_filename(job["Parameters"])
             nzb_id = job["NZBID"]
             nzb_age = job["MaxPostTime"]  # nzb age
             nzb_critical_health = job["CriticalHealth"]
