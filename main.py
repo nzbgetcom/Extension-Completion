@@ -229,8 +229,10 @@ def get_nzb_filename(parameters):
             break
     return p["Value"]
 
-def get_max_failed_limit(critical_health ) -> float:
+
+def get_max_failed_limit(critical_health) -> float:
     return round(100 - critical_health / 10.0, 1)
+
 
 def get_nzb_status(nzb):
     """
