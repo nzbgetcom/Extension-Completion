@@ -229,6 +229,8 @@ def get_nzb_filename(parameters):
             break
     return p["Value"]
 
+def get_max_failed_limit(critical_health ) -> float:
+    return round(100 - critical_health / 10.0, 1)
 
 def get_nzb_status(nzb):
     """
@@ -271,7 +273,7 @@ def get_nzb_status(nzb):
         )
         unpause_nzb(nzb[0])  # unpause based on NZBGet ID
     else:
-        failed_limit = 100 - nzb[3] / 10.0
+        failed_limit = get_max_failed_limit(nzb[3])
         print("Maximum failed articles limit for NZB: " + str(failed_limit) + "%")
         if MAX_FAILURE > 0:
             print(
@@ -414,7 +416,7 @@ def get_dupe_nzb_status(nzb):
                 else:
                     mark_bad_dupe(nzb_id)
             else:
-                failed_limit = 100 - nzb_critical_health / 10.0
+                failed_limit = get_max_failed_limit(nzb[3])
                 print("[V] Maximum failed articles limit: " + str(failed_limit) + "%")
                 failed_ratio = check_failure_status(rar_msg_ids, failed_limit, nzb[2])
                 if VERBOSE:
@@ -459,8 +461,6 @@ def is_number(s):
     """
     Checks if the string can be converted to a number
     """
-    #   if VERBOSE:
-    #     print('[V] is_number(s= ' + str(s) + ' )')
     try:
         float(s)
         return True
