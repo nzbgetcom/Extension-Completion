@@ -61,6 +61,7 @@ MAX_FAILURE = int(os.environ.get("NZBPO_MaxFailure", 0))
 CHECK_METHOD = "STAT"
 VERBOSE = os.environ.get("NZBPO_Verbose", "No") == "Yes"
 EXTREME = os.environ.get("NZBPO_Extreme", "No") == "Yes"
+IGNORE_QUEUE_PRIORITY = os.environ.get("NZBPO_IgnoreQueuePriority", "No") == "Yes"
 CHECK_LIMIT = int(os.environ.get("NZBPO_CheckLimit", 10))
 MAX_ARTICLES = int(os.environ.get("NZBPO_MaxArticles", 1000))
 MIN_ARTICLES = int(os.environ.get("NZBPO_MinArticles", 50))
@@ -1688,39 +1689,43 @@ def get_prio_nzb(jobs, paused_jobs):
             print("[E] " + str(job))
     start_time = time.time()
     do_check = False
-    max_queued_priority = -1.7976931348623157e308
-    # check if something is downloading, loop through jobs, extract max priority
-    # of DOWNLOADING / QUEUED items
-    for job in jobs:
-        if job["Status"] in ("DOWNLOADING", "QUEUED"):
+    if not IGNORE_QUEUE_PRIORITY:
+        max_queued_priority = -1.7976931348623157e308
+        # check if something is downloading, loop through jobs, extract max priority
+        # of DOWNLOADING / QUEUED items
+        for job in jobs:
+            if job["Status"] in ("DOWNLOADING", "QUEUED"):
+                nzb_priority = job["MaxPriority"]
+                if nzb_priority > max_queued_priority:
+                    max_queued_priority = nzb_priority
+        if VERBOSE and max_queued_priority != -1.7976931348623157e308:
+            print(
+                "[V] Maximum priority of DOWNLOADING / QUEUED NZBs = "
+                + str(max_queued_priority)
+            )
+        for job in paused_jobs:
             nzb_priority = job["MaxPriority"]
             if nzb_priority > max_queued_priority:
-                max_queued_priority = nzb_priority
-    if VERBOSE and max_queued_priority != -1.7976931348623157e308:
-        print(
-            "[V] Maximum priority of DOWNLOADING / QUEUED NZBs = "
-            + str(max_queued_priority)
-        )
-    for job in paused_jobs:
-        nzb_priority = job["MaxPriority"]
-        if nzb_priority > max_queued_priority:
-            do_check = True
-            if VERBOSE and max_queued_priority != -1.7976931348623157e308:
-                print(
-                    (
-                        "[V] QUEUED / DOWNLOADING NZBs have lower priority "
-                        + "than by script paused items, starting check"
+                do_check = True
+                if VERBOSE and max_queued_priority != -1.7976931348623157e308:
+                    print(
+                        (
+                            "[V] QUEUED / DOWNLOADING NZBs have lower priority "
+                            + "than by script paused items, starting check"
+                        )
                     )
+                break
+            else:
+                do_check = False
+        if do_check == False and max_queued_priority != -1.7976931348623157e308:
+            if VERBOSE:
+                print(
+                    "[V] QUEUED / DOWNLOADING NZBs have higher or equal "
+                    + "priority than by script paused items, skipping check"
                 )
-            break
-        else:
-            do_check = False
-    if do_check == False and max_queued_priority != -1.7976931348623157e308:
-        if VERBOSE:
-            print(
-                "[V] QUEUED / DOWNLOADING NZBs have higher or equal "
-                + "priority than by script paused items, skipping check"
-            )
+    else:
+        do_check = True
+        print("[V] Ignoring priority of existing items")
     if do_check:
         paused = nzbget_paused()  # check if NZBGet is paused, +pause NZBGet
         if paused:  # NZBGet is paused by user, no check
