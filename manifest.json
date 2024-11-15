@@ -208,6 +208,16 @@
                 "Default = No."
             ],
             "select": ["Yes", "No"]
+        },
+        {
+            "name": "IgnoreQueuePriority",
+            "displayName": "IgnoreQueuePriority",
+            "value": "No",
+            "description": [
+                "Ignore queue priority and always validate items immediately",
+                "Default = No."
+            ],
+            "select": ["Yes", "No"]
         }
     ],
     "commands": [
