@@ -8,7 +8,7 @@ If you need support for Python 2.x versions then you can get legacy version v1.1
 
 # Completion
 
-[NZBGet](https://nzbget.com) [extension](https://github.com/nzbgetcom/nzbget/blob/main/docs/extensions/EXTENSIONS.md) that checks if the data in the NZB file is sufficiently complete at your usenet provider(s), before starting the download. If incomplete it would wait for a certain period and check the completion of the NZB file again. This check is done by requesting the header status, and is in normal cases done within seconds (like 1 - 5 sec. for a 1 GB file). This method is significantly faster than when NZBGet would report a failure, after actual downloading a (part of) the files that end up incomplete. The script is typically useful for issues related to:
+[NZBGet](https://nzbget.com)[extension](https://github.com/nzbgetcom/nzbget/blob/main/docs/extensions/EXTENSIONS.md) that checks if the data in the NZB file is sufficiently complete at your usenet provider(s), before starting the download. If incomplete it would wait for a certain period and check the completion of the NZB file again. This check is done by requesting the header status, and is in normal cases done within seconds (like 1 - 5 sec. for a 1 GB file). This method is significantly faster than when NZBGet would report a failure, after actual downloading a (part of) the files that end up incomplete. The script is typically useful for issues related to:
 - very recent posts,
 - failed downloads, which after a while are just ok (propagation issues),
 - incomplete posts,

@@ -1,8 +1,8 @@
 #
-# Completion.py script for NZBGet
+# The Completion extension for NZBGet <https://nzbget.com>
 #
 # Copyright (C) 2014-2017 kloaknet.
-# Copyright (C) 2024 Denis <denis@nzbget.com>
+# Copyright (C) 2024-2025 Denis <denis@nzbget.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@
 
 
 import os
-import urllib.request, urllib.error, urllib.parse
+import urllib.request
 import base64
 import json
 import time
@@ -28,7 +28,7 @@ import sys
 import socket
 import ssl
 import traceback
-import html.parser
+import html
 import errno
 from xmlrpc.client import ServerProxy
 from operator import itemgetter
@@ -51,6 +51,16 @@ if CHECK_DUPES != "No" and os.environ.get("NZBOP_DUPECHECK") == "No":
         + "does not work"
     )
 FORCE_FAILURE = os.environ.get("NZBPO_ForceFailure", "No") == "Yes"
+PP_PARAMS_ON_SUCCESS = [
+    p.strip()
+    for p in os.environ.get("NZBPO_SetParamsOnSuccess", "").split(",")
+    if os.environ.get("NZBPO_SetParamsOnSuccess", "")
+]
+PP_PARAMS_ON_FAILURE = [
+    p.strip()
+    for p in os.environ.get("NZBPO_SetParamsOnFailure", "").split(",")
+    if os.environ.get("NZBPO_SetParamsOnFailure", "")
+]
 CATEGORIES = os.environ.get("NZBPO_Categories", "").lower().split(",")
 CATEGORIES = [c.strip(" ") for c in CATEGORIES]
 SERVERS = os.environ.get("NZBPO_Servers", "").lower().split(",")
@@ -58,7 +68,7 @@ SERVERS = [c.strip(" ") for c in SERVERS]
 FILL_SERVERS = os.environ.get("NZBPO_FillServers", "").lower().split(",")
 FILL_SERVERS = [c.strip(" ") for c in FILL_SERVERS]
 MAX_FAILURE = int(os.environ.get("NZBPO_MaxFailure", 0))
-CHECK_METHOD = "STAT"
+CHECK_METHOD = os.environ.get("NZBPO_CheckMethod", "STAT")
 VERBOSE = os.environ.get("NZBPO_Verbose", "No") == "Yes"
 EXTREME = os.environ.get("NZBPO_Extreme", "No") == "Yes"
 IGNORE_QUEUE_PRIORITY = os.environ.get("NZBPO_IgnoreQueuePriority", "No") == "Yes"
@@ -231,6 +241,14 @@ def get_nzb_filename(parameters):
     return p["Value"]
 
 
+def set_pp_parameters(nzb_id, params) -> None:
+    if len(params) > 0:
+        NZBGet = connect_to_nzbget()
+
+        for param in params:
+            NZBGet.editqueue("GroupSetParameter", 0, param, [int(nzb_id)])
+
+
 def get_max_failed_limit(critical_health) -> float:
     return round(100 - critical_health / 10.0, 1)
 
@@ -249,7 +267,7 @@ def get_nzb_status(nzb):
     # collect rar msg ids that need to be checked
     rar_msg_ids = get_nzb_data(nzb[1])
     if rar_msg_ids == -1:  # no such NZB file
-        succes = True  # file send back to queue
+        success = True  # file send back to queue
         print(
             "[WARNING] The NZB file "
             + str(nzb[1])
@@ -258,7 +276,7 @@ def get_nzb_status(nzb):
         )
         unpause_nzb(nzb[0])  # unpause based on NZBGet ID
     elif rar_msg_ids == -2:  # empty NZB or no group
-        succes = True  # file send back to queue
+        success = True  # file send back to queue
         print(
             "[WARNING] The NZB file "
             + str(nzb[1])
@@ -267,7 +285,7 @@ def get_nzb_status(nzb):
         )
         unpause_nzb(nzb[0])  # unpause based on NZBGet ID
     elif rar_msg_ids == -3:  # NZB without RAR files.
-        succes = True  # file send back to queue
+        success = True  # file send back to queue
         print(
             "[WARNING] The NZB file "
             + str(nzb[1])
@@ -291,25 +309,28 @@ def get_nzb_status(nzb):
             failed_ratio < failed_limit
             and (failed_ratio < MAX_FAILURE or MAX_FAILURE == 0)
         ) or failed_ratio == 0:
-            succes = True
+            success = True
             print('Resuming: "' + nzb[1] + '"')
             sys.stdout.flush()
+            set_pp_parameters(nzb[0], PP_PARAMS_ON_SUCCESS)
             unpause_nzb(nzb[0])  # unpause based on NZBGet ID
         elif (
             failed_ratio >= failed_limit
             or (failed_ratio >= MAX_FAILURE and MAX_FAILURE > 0)
         ) and nzb[2] < (int(time.time()) - int(AGE_LIMIT_SEC)):
-            succes = False
+            success = False
             if VERBOSE:
                 if not FORCE_FAILURE:
                     print('[V] Marked as BAD: "' + nzb[1] + '"')
                     sys.stdout.flush()  # otherwise NZBGet sends message first
             if FORCE_FAILURE:
+                set_pp_parameters(nzb[0], PP_PARAMS_ON_FAILURE)
                 force_failure(nzb[0])
             else:
+                set_pp_parameters(nzb[0], PP_PARAMS_ON_FAILURE)
                 mark_bad(nzb[0])
         else:
-            succes = False
+            success = False
             # dupekey should not be '', that would mean it is not added by RSS
             if CHECK_DUPES != "no" and nzb[4] != "":
                 if get_dupe_nzb_status(nzb):
@@ -334,7 +355,7 @@ def get_nzb_status(nzb):
                     + "the dupekey is empty and checking for DUPEs in the history "
                     + "is skipped."
                 )
-    return succes
+    return success
 
 
 def get_dupe_nzb_status(nzb):
@@ -471,6 +492,14 @@ def is_number(s):
         return False
 
 
+def make_article_check_request(sock, sock_id, method, msg_id, host) -> None:
+    request = f"{method} <{msg_id}>\r\n"
+    if EXTREME:
+        print(f"[E] Socket {sock_id}: {msg_id} {host}, Send: {request}")
+
+    sock.send(request.encode("utf-8"))
+
+
 def check_send_server_reply(
     sock, reply: str, group: str, id, i, host, username, password
 ):
@@ -595,12 +624,9 @@ def check_send_server_reply(
                     + ", NNTP reply: "
                     + str(reply.split())
                 )
-            text = CHECK_METHOD + " <" + id + ">\r\n"  # STAT is faster than HEAD
-            if EXTREME:
-                print(
-                    "[E] Socket: " + str(i) + " " + str(host) + ", Send: " + str(text)
-                )
-            sock.send(text.encode("utf-8"))
+
+            make_article_check_request(sock, i, CHECK_METHOD, id, host)
+
         elif server_reply in ("381"):  # 381 Password required
             text = "AUTHINFO PASS %s\r\n" % (password)
             if EXTREME:
@@ -708,14 +734,8 @@ def check_send_server_reply(
             "423",
             "430",
         ):
-            # Send next message
-            text = CHECK_METHOD + " <" + id + ">\r\n"  # STAT is faster than HEAD
             id_used = True
-            if EXTREME:
-                print(
-                    "[E] Socket: " + str(i) + " " + str(host) + ", Send: " + str(text)
-                )
-            sock.send(text.encode("utf-8"))
+            make_article_check_request(sock, i, CHECK_METHOD, id, host)
         elif end_loop and server_reply not in ("205"):
             text = "QUIT\r\n"
             sock.send(text.encode("utf-8"))
