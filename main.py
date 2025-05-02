@@ -2,7 +2,7 @@
 # Completion.py script for NZBGet
 #
 # Copyright (C) 2014-2017 kloaknet.
-# Copyright (C) 2024 Denis <denis@nzbget.com>
+# Copyright (C) 2024-2025 Denis <denis@nzbget.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@
 
 
 import os
-import urllib.request, urllib.error, urllib.parse
+import urllib.request
 import base64
 import json
 import time
@@ -28,7 +28,7 @@ import sys
 import socket
 import ssl
 import traceback
-import html.parser
+import html
 import errno
 from xmlrpc.client import ServerProxy
 from operator import itemgetter
@@ -1531,6 +1531,24 @@ def check_failure_status(rar_msg_ids, failed_limit, nzb_age):
     return failed_ratio
 
 
+def handle_corrupted_lock_file(f_name, server_time):
+    print(f"[WARNING] Corrupted lock file found at {f_name}. Attempting to recreate.")
+    try:
+        os.remove(f_name)
+    except OSError as e:
+        print(f"[ERROR] Failed to remove corrupted lock file, reason {e}")
+        return True
+    try:
+        with open(f_name, encoding="utf-8", mode="w") as fd:
+            fd.write(str(server_time))
+            print(f"[INFO] New completion.lock file created.")
+            return False
+
+    except OSError as e:
+        print(f"[ERROR] recreating lock file after corruption: {e}")
+        return True
+
+
 def lock_file():
     """
     This function checks if the .lock file is there, if it is created
@@ -1556,7 +1574,12 @@ def lock_file():
     file_exists = os.path.isfile(f_name)
     if file_exists:
         fd = open(f_name, encoding="utf-8")
-        time_stamp = int(fd.readline())
+        time_stamp = 0
+        try:
+            time_stamp = int(fd.readline())
+        except ValueError:
+            return handle_corrupted_lock_file(f_name, server_time)
+
         if VERBOSE:
             print(
                 "[V] time_stamp from completion.lock file= " + str(time_stamp)
