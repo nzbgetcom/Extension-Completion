@@ -51,6 +51,16 @@ if CHECK_DUPES != "No" and os.environ.get("NZBOP_DUPECHECK") == "No":
         + "does not work"
     )
 FORCE_FAILURE = os.environ.get("NZBPO_ForceFailure", "No") == "Yes"
+PP_PARAMS_ON_SUCCESS = [
+    p.strip()
+    for p in os.environ.get("NZBPO_SetParamsOnSuccess", "").split(",")
+    if os.environ.get("NZBPO_SetParamsOnSuccess", "")
+]
+PP_PARAMS_ON_FAILURE = [
+    p.strip()
+    for p in os.environ.get("NZBPO_SetParamsOnFailure", "").split(",")
+    if os.environ.get("NZBPO_SetParamsOnFailure", "")
+]
 CATEGORIES = os.environ.get("NZBPO_Categories", "").lower().split(",")
 CATEGORIES = [c.strip(" ") for c in CATEGORIES]
 SERVERS = os.environ.get("NZBPO_Servers", "").lower().split(",")
@@ -231,6 +241,30 @@ def get_nzb_filename(parameters):
     return p["Value"]
 
 
+def set_pp_parameters(nzb_id, params) -> None:
+    """
+    Sets post-processing parameters for a specific group (NZB) in the NZBGet queue.
+    """
+
+    if not params:
+        return
+
+    try:
+        NZBGet = connect_to_nzbget()
+    except Exception as e:
+        print(f"[ERROR] Failed to connect to NZBGet: {e}")
+        return
+
+    if VERBOSE:
+        print(f"[V] Setting post-processing parameters for group {nzb_id}: {str(params)}")
+
+    for param in params:
+        try:
+            NZBGet.editqueue("GroupSetParameter", 0, param, [int(nzb_id)])
+        except Exception as e:
+            print(f"[ERROR] Error setting parameter {param} for {nzb_id}: {e}")
+
+
 def get_max_failed_limit(critical_health) -> float:
     return round(100 - critical_health / 10.0, 1)
 
@@ -249,7 +283,7 @@ def get_nzb_status(nzb):
     # collect rar msg ids that need to be checked
     rar_msg_ids = get_nzb_data(nzb[1])
     if rar_msg_ids == -1:  # no such NZB file
-        succes = True  # file send back to queue
+        success = True  # file send back to queue
         print(
             "[WARNING] The NZB file "
             + str(nzb[1])
@@ -258,7 +292,7 @@ def get_nzb_status(nzb):
         )
         unpause_nzb(nzb[0])  # unpause based on NZBGet ID
     elif rar_msg_ids == -2:  # empty NZB or no group
-        succes = True  # file send back to queue
+        success = True  # file send back to queue
         print(
             "[WARNING] The NZB file "
             + str(nzb[1])
@@ -267,7 +301,7 @@ def get_nzb_status(nzb):
         )
         unpause_nzb(nzb[0])  # unpause based on NZBGet ID
     elif rar_msg_ids == -3:  # NZB without RAR files.
-        succes = True  # file send back to queue
+        success = True  # file send back to queue
         print(
             "[WARNING] The NZB file "
             + str(nzb[1])
@@ -291,15 +325,20 @@ def get_nzb_status(nzb):
             failed_ratio < failed_limit
             and (failed_ratio < MAX_FAILURE or MAX_FAILURE == 0)
         ) or failed_ratio == 0:
-            succes = True
+            success = True
             print('Resuming: "' + nzb[1] + '"')
             sys.stdout.flush()
+
+            set_pp_parameters(nzb[0], PP_PARAMS_ON_SUCCESS)
             unpause_nzb(nzb[0])  # unpause based on NZBGet ID
         elif (
             failed_ratio >= failed_limit
             or (failed_ratio >= MAX_FAILURE and MAX_FAILURE > 0)
         ) and nzb[2] < (int(time.time()) - int(AGE_LIMIT_SEC)):
-            succes = False
+            success = False
+
+            set_pp_parameters(nzb[0], PP_PARAMS_ON_FAILURE)
+
             if VERBOSE:
                 if not FORCE_FAILURE:
                     print('[V] Marked as BAD: "' + nzb[1] + '"')
@@ -309,7 +348,7 @@ def get_nzb_status(nzb):
             else:
                 mark_bad(nzb[0])
         else:
-            succes = False
+            success = False
             # dupekey should not be '', that would mean it is not added by RSS
             if CHECK_DUPES != "no" and nzb[4] != "":
                 if get_dupe_nzb_status(nzb):
@@ -334,7 +373,7 @@ def get_nzb_status(nzb):
                     + "the dupekey is empty and checking for DUPEs in the history "
                     + "is skipped."
                 )
-    return succes
+    return success
 
 
 def get_dupe_nzb_status(nzb):
