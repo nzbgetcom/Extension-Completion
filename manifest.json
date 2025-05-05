@@ -97,7 +97,7 @@
             "value": "",
             "description": [
                 "Sets post-processing parameters for the group when the completion check succeeds.",
-                "Specify parameters as 'ParamName=ParamValue, ParamName2=ParamValue2'.",
+                "Specify parameters as 'CompletionCheck=False, DownloadStatus=Failure'.",
                 "Default = blank."
             ],
             "select": []
@@ -108,7 +108,7 @@
             "value": "",
             "description": [
                 "Sets post-processing parameters for the group when the completion check fails.",
-                "Specify parameters as 'ParamName=ParamValue, ParamName2=ParamValue2'.",
+                "Specify parameters as 'CompletionCheck=True, DownloadStatus=Success'.",
                 "Default = blank."
             ],
             "select": []
@@ -155,7 +155,7 @@
             "description": [
                 "Check all archives when no pars.",
                 "Force a full check on all the archives articles in the release when no or",
-                "only 1 par file is included. This to garantee all articles are there and you",
+                "only 1 par file is included. This to guarantee all articles are there and you",
                 "don't waste bandwidth because just 1 article is missing.",
                 "Default = Yes."
             ],
@@ -168,7 +168,7 @@
             "description": [
                 "Categories to check for completion.",
                 "Comma separated list like 'TV-HD, TV, Movies, etc'. Leave blank for all",
-                "categories. Note that the category of an NZB file is shown in the donwload",
+                "categories. Note that the category of an NZB file is shown in the download",
                 "and history queue.",
                 "Default = blank."
             ],
@@ -183,7 +183,7 @@
                 "Comma separated list like '1, 3, 4'. Leave blank for all news-servers.",
                 "News-server numbers are equal to the server numbering in the NZBGet settings",
                 "on the NEWS-SERVERS tab.",
-                "Suggestion is the specify atleast your main news-servers.",
+                "Suggestion is the specify at least your main news-servers.",
                 "Default = blank."
             ],
             "select": []
