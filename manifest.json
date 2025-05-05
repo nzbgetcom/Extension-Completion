@@ -92,6 +92,28 @@
             "select": ["Yes", "No"]
         },
         {
+            "name": "SetParamsOnSuccess",
+            "displayName": "SetParamsOnSuccess",
+            "value": "",
+            "description": [
+                "Sets post-processing parameters for the group when the completion check succeeds.",
+                "Specify parameters as 'ParamName=ParamValue, ParamName2=ParamValue2'.",
+                "Default = blank."
+            ],
+            "select": []
+        },
+        {
+            "name": "SetParamsOnFailure",
+            "displayName": "SetParamsOnFailure",
+            "value": "",
+            "description": [
+                "Sets post-processing parameters for the group when the completion check fails.",
+                "Specify parameters as 'ParamName=ParamValue, ParamName2=ParamValue2'.",
+                "Default = blank."
+            ],
+            "select": []
+        },
+        {
             "name": "CheckLimit",
             "displayName": "CheckLimit",
             "value": 10,
@@ -195,6 +217,16 @@
             "select": []
         },
         {
+            "name": "IgnoreQueuePriority",
+            "displayName": "IgnoreQueuePriority",
+            "value": "No",
+            "description": [
+                "Ignore queue priority and always validate items immediately",
+                "Default = No."
+            ],
+            "select": ["Yes", "No"]
+        },
+        {
             "name": "Verbose",
             "displayName": "Verbose",
             "value": "No",
@@ -211,16 +243,6 @@
             "description": [
                 "Print even more info to the log for debugging.",
                 "This will print your news-server passwords in the logs too!.",
-                "Default = No."
-            ],
-            "select": ["Yes", "No"]
-        },
-        {
-            "name": "IgnoreQueuePriority",
-            "displayName": "IgnoreQueuePriority",
-            "value": "No",
-            "description": [
-                "Ignore queue priority and always validate items immediately",
                 "Default = No."
             ],
             "select": ["Yes", "No"]
