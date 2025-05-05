@@ -97,7 +97,8 @@
             "value": "",
             "description": [
                 "Sets post-processing parameters for the group when the completion check succeeds.",
-                "Specify parameters as 'CompletionCheck=False, DownloadStatus=Failure'.",
+                "Specify parameters as 'ParamName=ParamValue, ParamName2=ParamValue2'.",
+                "Example: 'CompletionCheck=True, DownloadStatus=Success'.",
                 "Default = blank."
             ],
             "select": []
@@ -107,8 +108,9 @@
             "displayName": "SetParamsOnFailure",
             "value": "",
             "description": [
-                "Sets post-processing parameters for the group when the completion check fails.",
-                "Specify parameters as 'CompletionCheck=True, DownloadStatus=Success'.",
+                "Sets post-processing parameters for the group when the completion check succeeds.",
+                "Specify parameters as 'ParamName=ParamValue, ParamName2=ParamValue2'.",
+                "Example: 'CompletionCheck=False, DownloadStatus=Failure'.",
                 "Default = blank."
             ],
             "select": []
