@@ -37,6 +37,7 @@ sys.stdout.reconfigure(encoding="utf-8")
 
 
 # Defining constants
+CERT_STORE = os.environ.get("NZBOP_CertStore", None)
 AGE_LIMIT = int(os.environ.get("NZBPO_AgeLimit", 4))
 AGE_LIMIT_SEC = 3600 * AGE_LIMIT
 AGE_SORT_LIMIT = int(os.environ.get("NZBPO_AgeSortLimit", 48))
@@ -822,13 +823,15 @@ def get_nzb_data(fname):
         all_msg_ids = []  # list of message ids for NNTP server
         group = None
         groups = None
+        subject = ""
+        par = 0
         for line in lines:
             low_line = line.lower()
             if "<segment bytes" in low_line:  # msg id
                 message_id = line.split(">")[1].split("<")[0]
                 ok = -1  # = no check / failed; 1,2,.. ok for server num
                 all_msg_ids.append([subject, par, groups, message_id, ok])
-            elif "<file" in low_line:  # look for par2 files
+            elif "<file" in low_line and "subject=" in low_line:  # look for par2 files
                 subject = line.split("subject=")[1].split(">")[0]
                 if ".par2" in low_line:
                     par = 1  # found a par file, next msg_ids of par2s
@@ -1129,6 +1132,22 @@ def create_sockets(server, articles_to_check):
         # create connections
         if encryption:
             context = ssl.create_default_context()
+
+            if CERT_STORE and os.path.exists(CERT_STORE):
+                if VERBOSE:
+                    print(f"[V] Loading CertStore from: {CERT_STORE}")
+                try:
+                    if os.path.isfile(CERT_STORE):
+                        context.load_verify_locations(cafile=CERT_STORE)
+                    else:
+                        context.load_verify_locations(capath=CERT_STORE)
+                except Exception as e:
+                    print(f"[WARNING] Failed to load CertStore: {e}")
+                    context.check_hostname = False
+                    context.verify_mode = ssl.CERT_NONE
+            else:
+                context.check_hostname = False
+                context.verify_mode = ssl.CERT_NONE
 
             for i in range(start_sock, end_sock):
                 s = socket.socket(af, socket.SOCK_STREAM)
