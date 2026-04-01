@@ -2,7 +2,7 @@
 # Completion.py script for NZBGet
 #
 # Copyright (C) 2014-2017 kloaknet.
-# Copyright (C) 2024-2025 Denis <denis@nzbget.com>
+# Copyright (C) 2024-2026 Denis <denis@nzbget.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -242,6 +242,28 @@ def get_nzb_filename(parameters):
     return p["Value"]
 
 
+def has_nzb_parameter(parameters, parameter_name):
+    """
+    Check whether a parameters-list contains a specific NZB parameter by name.
+    """
+    if not parameters:
+        return False
+    for parameter in parameters:
+        if parameter.get("Name") == parameter_name:
+            return True
+    return False
+
+
+def is_script_paused_job(job):
+    """
+    Check whether queue/history job was paused by this extension.
+    """
+    return (
+        job.get("Status") == "PAUSED"
+        and has_nzb_parameter(job.get("Parameters"), "CnpNZBFileName")
+    )
+
+
 def set_pp_parameters(nzb_id, params) -> None:
     """
     Sets post-processing parameters for a specific group (NZB) in the NZBGet queue.
@@ -395,7 +417,7 @@ def get_dupe_nzb_status(nzb):
         if (
             job["Status"] == "DELETED/DUPE"
             and job["DupeKey"] == nzb[4]
-            and "CnpNZBFileName" in str(job)
+            and has_nzb_parameter(job.get("Parameters"), "CnpNZBFileName")
         ):
             if CHECK_DUPES == "yes":
                 duplicate = True
@@ -509,6 +531,16 @@ def is_number(s):
         return True
     except ValueError:
         return False
+
+
+def is_max_connections_reply(server_reply, reply):
+    """
+    Detect provider-side max-connections replies so we can back off cleanly.
+    """
+    if server_reply != "502":
+        return False
+    text = str(reply).lower()
+    return "maximum connections" in text or "too many connections" in text
 
 
 def check_send_server_reply(
@@ -692,15 +724,26 @@ def check_send_server_reply(
                 )
             sock.send(text.encode("utf-8"))
         elif str(server_reply[:2]) in ("48", "50"):
-            # 48X or 50X incorrect news server account settings
-            print(
-                "[ERROR] Socket: "
-                + str(i)
-                + " "
-                + str(host)
-                + ", Incorrect news server account settings: "
-                + reply
-            )
+            if is_max_connections_reply(server_reply, reply):
+                server_reply = "MAX_CONN"
+                print(
+                    "[WARNING] Socket: "
+                    + str(i)
+                    + " "
+                    + str(host)
+                    + ", NNTP max connections reached: "
+                    + str(reply).strip()
+                )
+            else:
+                # 48X or 50X incorrect news server account settings
+                print(
+                    "[ERROR] Socket: "
+                    + str(i)
+                    + " "
+                    + str(host)
+                    + ", Incorrect news server account settings: "
+                    + reply
+                )
         elif server_reply in ("205"):  # NNTP Service exits normally
             sock.close()
             if EXTREME:
@@ -786,12 +829,14 @@ def fix_nzb(nzb_lines):
         print("[V] Splitting NZB data into separate lines.")
         sys.stdout.flush()
     nzb_lines = str(nzb_lines)
-    positions = [n for n in range(len(nzb_lines)) if nzb_lines.find("><", n) == n]
     first = 0
-    last = 0
     corrected_lines = []
-    for n in positions:
-        last = n + 1
+    while True:
+        next_split = nzb_lines.find("><", first)
+        if next_split == -1:
+            corrected_lines.append(nzb_lines[first:])
+            break
+        last = next_split + 1
         corrected_lines.append(nzb_lines[first:last])
         first = last
     if VERBOSE:
@@ -808,63 +853,75 @@ def get_nzb_data(fname):
     if VERBOSE:
         print("[V] get_nzb_data(fname=" + str(fname) + ")")
         sys.stdout.flush()
-    if os.path.isfile(fname):
-        file_exists = True
-        fd = open(fname, encoding="utf-8")
-        lines = fd.readlines()
-        fd.close()
-        if len(lines) == 1:  # single line NZB
-            lines = fix_nzb(lines)
-    else:
-        file_exists = False
+    if not os.path.isfile(fname):
         print("[ERROR] No such nzb file.")
         return -1
-    if file_exists:
-        all_msg_ids = []  # list of message ids for NNTP server
-        group = None
-        groups = None
-        subject = ""
-        par = 0
-        for line in lines:
-            low_line = line.lower()
-            if "<segment bytes" in low_line:  # msg id
-                message_id = line.split(">")[1].split("<")[0]
-                ok = -1  # = no check / failed; 1,2,.. ok for server num
-                all_msg_ids.append([subject, par, groups, message_id, ok])
-            elif "<file" in low_line and "subject=" in low_line:  # look for par2 files
-                subject = line.split("subject=")[1].split(">")[0]
-                if ".par2" in low_line:
-                    par = 1  # found a par file, next msg_ids of par2s
-                else:
-                    par = 0  # not a par file, next msg ids of files
-            elif "<groups>" in low_line:  # set of groups
-                # new list of groups found
+
+    rar_msg_ids = []
+    group = None
+    groups = None
+    subject = ""
+    par = 0
+    all_articles = 0
+    par_articles = 0
+
+    def parse_line(line):
+        nonlocal group, groups, subject, par, all_articles, par_articles
+        if line is None:
+            return
+        if line == "":
+            return
+        low_line = line.lower()
+        if "<segment bytes" in low_line:  # msg id
+            message_id = line.split(">")[1].split("<")[0]
+            ok = -1  # = no check / failed; 1,2,.. ok for server num
+            all_articles += 1
+            if par == 0:
+                rar_msg_ids.append([subject, par, groups, message_id, ok])
+            else:
+                par_articles += 1
+        elif "<file" in low_line and "subject=" in low_line:  # look for par2 files
+            subject = line.split("subject=")[1].split(">")[0]
+            if ".par2" in low_line:
+                par = 1  # found a par file, next msg_ids of par2s
+            else:
+                par = 0  # not a par file, next msg ids of files
+        elif "<groups>" in low_line:  # set of groups
+            # new list of groups found
+            groups = []
+        elif "<group>" in low_line:  # group name
+            group = line.split(">")[1].split("<")[0]
+            if groups is None:
                 groups = []
-            elif "<group>" in low_line:  # group name
-                group = line.split(">")[1].split("<")[0]
-                groups.append(group)
+            groups.append(group)
+
+    with open(fname, encoding="utf-8") as fd:
+        first_line = fd.readline()
+        if first_line:
+            second_line = fd.readline()
+            if second_line:
+                parse_line(first_line)
+                parse_line(second_line)
+                for line in fd:
+                    parse_line(line)
+            else:
+                # single line NZB
+                for line in fix_nzb(first_line):
+                    parse_line(line)
+
     if not group:
         print("[ERROR] No group found in NZB file.")
         if VERBOSE:
             print("[V] group: " + str(group))
         return -2
-    if len(all_msg_ids) == 0:
+    if all_articles == 0:
         print("[ERROR] No message-ids found in NZB file")
         if VERBOSE:
-            print("[V] all_msg_ids: " + str(all_msg_ids))
+            print("[V] all_msg_ids: []")
         return -2
-    rar_msg_ids = []
-    par_msg_ids = []
-    for msg_id in all_msg_ids:  # split par2 from other files
-        if msg_id[1] == 0:
-            rar_msg_ids.append(msg_id)
-        else:
-            par_msg_ids.append(msg_id)
-    all_articles = len(all_msg_ids)
+
     rar_articles = len(rar_msg_ids)
-    par_articles = len(par_msg_ids)
-    temp = len(rar_msg_ids)
-    if temp == 0:
+    if rar_articles == 0:
         # No .rar articles in NZB.
         return -3
     # check if more than 1 pars are available or not.
@@ -878,16 +935,16 @@ def get_nzb_data(fname):
             print("[V] 1 par file in release, all articles will be " + "checked.")
     else:
         each = int(100 / CHECK_LIMIT)  # check each Xth article only
-        if temp / each > MAX_ARTICLES:
-            each = int(temp / MAX_ARTICLES)
+        if rar_articles / each > MAX_ARTICLES:
+            each = int(rar_articles / MAX_ARTICLES)
             if VERBOSE:
                 print(
                     "[V] Amount of to be checked articles limited to about "
                     + str(MAX_ARTICLES)
                     + " articles."
                 )
-        elif temp / each < MIN_ARTICLES:
-            each = int(temp / MIN_ARTICLES)
+        elif rar_articles / each < MIN_ARTICLES:
+            each = int(rar_articles / MIN_ARTICLES)
             if each == 0:
                 each = 1
             if VERBOSE:
@@ -897,8 +954,7 @@ def get_nzb_data(fname):
                     + str(MIN_ARTICLES)
                     + " articles."
                 )
-    t = rar_msg_ids[::each]
-    rar_msg_ids = t
+    rar_msg_ids = rar_msg_ids[::each]
     # parsing to be used ids, skipping subject parsing
     for i, rar_msg_id in enumerate(rar_msg_ids):
         rar_msg_ids[i][3] = html.unescape(rar_msg_id[3])
@@ -931,7 +987,6 @@ def get_server_settings(nzb_age):
     servers_status = nzbget_status["NewsServers"]
     temp = []
     servers = []
-    i = 0
     skip = False
     for server_status in servers_status:
         # extract all relevant data for each server:
@@ -1113,6 +1168,19 @@ def create_sockets(server, articles_to_check):
     if VERBOSE:
         print("[V] Creating sockets for server: " + host)
         sys.stdout.flush()
+    if queue_time != -1:
+        req_wait = queue_time + 5 - time.time() + SOCKET_LOOP_INTERVAL
+        if req_wait > 0:
+            if VERBOSE:
+                print(
+                    "[V] Waiting "
+                    + str(round(req_wait, 2))
+                    + " sec "
+                    + "while NZBGet closes its news server connections."
+                )
+                sys.stdout.flush()
+            # NZBGet sends QUIT after 5 seconds of inactivity for a connection.
+            time.sleep(req_wait)
     try:
         # check if we *must* use IPv6 for this host
         for res in sorted(socket.getaddrinfo(host, port, 0, socket.SOCK_STREAM)):
@@ -1188,20 +1256,6 @@ def create_sockets(server, articles_to_check):
                 failed_sockets[i] = i
                 conn_err += 1
                 continue  # for i
-        if queue_time != -1:
-            req_wait = queue_time + 5 - time.time() + SOCKET_LOOP_INTERVAL
-            if req_wait > 0:
-                if VERBOSE:
-                    print(
-                        "[V] Waiting "
-                        + str(round(req_wait, 2))
-                        + " sec "
-                        + "while NZBGet closes its news server connections."
-                    )
-                    sys.stdout.flush()
-                time.sleep(
-                    req_wait
-                )  # NZBGet sends QUIT after 5 seconds of innactivity (of a particular connection).
         if conn_err >= num_conn:
             print("[ERROR] Creation of all sockets for server " + host + " failed.")
     except:
@@ -1279,6 +1333,7 @@ def check_failure_status(rar_msg_ids, failed_limit, nzb_age):
             continue
         failed_ratio = 0
         num_server += 1
+        msg_id_to_index = {rar_msg_id[3]: index for index, rar_msg_id in enumerate(rar_msg_ids)}
         # filtering failed sockets
         socket_list = []
         for i in range(start_sock, end_sock):
@@ -1301,7 +1356,7 @@ def check_failure_status(rar_msg_ids, failed_limit, nzb_age):
             if loop_fail:  # exit while loop after looping
                 failed_ratio = 100
                 break
-            for i in socket_list:  # loop through ok sockets
+            for i in socket_list[:]:  # loop through ok sockets
                 reply = None
                 # break looping through sockets when already finished
                 if send_articles > articles_to_check - 1:
@@ -1420,18 +1475,37 @@ def check_failure_status(rar_msg_ids, failed_limit, nzb_age):
                             sockets[i], reply, group, id, i, host, username, password
                         )
                     )
+                    if server_reply == "MAX_CONN":
+                        try:
+                            sockets[i].close()
+                        except:
+                            pass
+                        if i in socket_list:
+                            socket_list.remove(i)
+                            num_conn = len(socket_list)
+                        if VERBOSE:
+                            print(
+                                "[WARNING] [V] Socket: "
+                                + str(i)
+                                + " "
+                                + str(host)
+                                + ", dropped due to max-connection limit. "
+                                + str(len(socket_list))
+                                + " socket(s) remain."
+                            )
+                        if num_conn <= 0:
+                            loop_fail = True
+                            break
+                        continue
                     if id_used and error:
                         # ID of missing article is not returned by server
                         failed_articles += 1
                     # found ok article on server, store success:
                     if id_used and not error and server_reply == "223":
-                        # find row index for successfully send article
-                        # (with reply)
-                        for j, rar_msg_id in enumerate(rar_msg_ids):
-                            if msg_id_used == rar_msg_id[3]:
-                                # store success serv num
-                                rar_msg_ids[j][4] = num_server
-                                break  # for j loop
+                        # store success serv num
+                        success_index = msg_id_to_index.get(msg_id_used)
+                        if success_index is not None:
+                            rar_msg_ids[success_index][4] = num_server
                     if id_used:  # avoids removing ids send before AUTH etc
                         # rar_msg_ids starts with base 0
                         send_articles += 1
@@ -1447,6 +1521,14 @@ def check_failure_status(rar_msg_ids, failed_limit, nzb_age):
                             )
                             sys.stdout.flush()
                 failed_ratio = failed_articles * 100.0 / articles_to_check
+        if len(socket_list) == 0:
+            print(
+                "[WARNING] No active sockets remain for server "
+                + host
+                + ", skipping current server."
+            )
+            failed_ratio = 100
+            continue
         # loop through all sockets, to catch the last server replies
         # without sending new STAT messages, and allowing sockets to close
         end_loop = True
@@ -1543,13 +1625,10 @@ def check_failure_status(rar_msg_ids, failed_limit, nzb_age):
                             )
                     # found ok article on server, store success:
                     elif not error and server_reply == "223":
-                        # find row index for successfully send article
-                        # (with recv reply)
-                        for j, rar_msg_id in enumerate(rar_msg_ids):
-                            if msg_id_used == rar_msg_id[3]:
-                                # store success serv num
-                                rar_msg_ids[j][4] = num_server
-                                break  # for j loop
+                        # store success serv num
+                        success_index = msg_id_to_index.get(msg_id_used)
+                        if success_index is not None:
+                            rar_msg_ids[success_index][4] = num_server
                         end_count += 1
                         if end_count >= num_conn:
                             print(
@@ -1568,8 +1647,8 @@ def check_failure_status(rar_msg_ids, failed_limit, nzb_age):
         if len(socket_list) > 0:  # kill still open sockets
             for i in socket_list:
                 try:
-                    sockets[i].send("QUIT\r\n")
-                    sockets[i].close
+                    sockets[i].send("QUIT\r\n".encode("utf-8"))
+                    sockets[i].close()
                 except:
                     continue
             time.sleep(
@@ -1718,6 +1797,16 @@ def nzbget_paused():
         if VERBOSE:
             print("[V] Waiting for NZBGet to end downloading")
             sys.stdout.flush()
+        if download_rate <= 0:
+            if VERBOSE:
+                print(
+                    "[V] Waiting 5 sec while NZBGet closes the news "
+                    + "server connections."
+                )
+                sys.stdout.flush()
+            time.sleep(
+                5
+            )  # NZBGet sends QUIT after 5 seconds of innactivity (of a particular connection).
         while download_rate > 0:  # avoid double use of connections
             if VERBOSE:
                 print(
@@ -1898,16 +1987,10 @@ def scheduler_call():
     # data contains ALL properties each NZB in queue
     data = call_nzbget_direct("listgroups")
     jobs = json.loads(data)
-    # check if nzb in queue, and check if paused by this script
-    if len(jobs["result"]) > 0 and "CnpNZBFileName" in str(jobs):
-        if not lock_file():  # check if script is not already running
-            paused_jobs = []
-            for job in jobs["result"]:
-                # send only nzbs paused by the script
-                if "CnpNZBFileName" in str(job) and job["Status"] in ("PAUSED"):
-                    paused_jobs.append(job)
-            if len(paused_jobs) > 0:
-                get_prio_nzb(jobs["result"], paused_jobs)
+    if len(jobs["result"]) > 0:
+        paused_jobs = [job for job in jobs["result"] if is_script_paused_job(job)]
+        if len(paused_jobs) > 0 and not lock_file():  # check if script is not already running
+            get_prio_nzb(jobs["result"], paused_jobs)
             del_lock_file()
     elif VERBOSE:
         print("[V] Empty queue")
@@ -1938,18 +2021,12 @@ def queue_call():
         # data contains ALL properties each NZB in queue
         data = call_nzbget_direct("listgroups")
         jobs = json.loads(data)
-        # check if nzb in queue, and check if paused by this script
-        if len(jobs["result"]) > 0 and "CnpNZBFileName" in str(jobs):
-            if not lock_file():  # check if script is not already running
-                paused_jobs = []
-                for job in jobs["result"]:
-                    # send only nzbs paused by the script
-                    if "CnpNZBFileName" in str(job) and job["Status"] in ("PAUSED"):
-                        paused_jobs.append(job)
-                if len(paused_jobs) > 0:
-                    if event == "NZB_DOWNLOADED":
-                        queue_time = time.time()
-                    get_prio_nzb(jobs["result"], paused_jobs)
+        if len(jobs["result"]) > 0:
+            paused_jobs = [job for job in jobs["result"] if is_script_paused_job(job)]
+            if len(paused_jobs) > 0 and not lock_file():  # check if script is not already running
+                if event == "NZB_DOWNLOADED":
+                    queue_time = time.time()
+                get_prio_nzb(jobs["result"], paused_jobs)
                 del_lock_file()
 
 
@@ -2081,47 +2158,33 @@ def write_to_file(input):
     fd.close()
 
 
-main()
+if __name__ == "__main__":
+    main()
 
-""" 
-TODO:
-    - User blackhawkpr had an issue related to a wrong or missing time stamp in
-      .lock file, can not reproduce, added additinal logging for it in VERBOSE 
-      logging.
-    - HEAD will fails as it does not check if all packets are received before 
-      asking for next HEAD. (Complete HEAD data ends with a .) HEAD 
-      implementation for python 3 only. STAT always returns 1 packet
-      http://code.activestate.com/recipes/408859/
-
-    ADDED/FIXED:
-    - Fixed an issue in where a filename might contained a } sign, resulting in
-      the no such nzb file message. Issue reported by user barenaked.
-    - Added check for correct python version.
-    - Removed Prioritize option
-    - Added option AgeSortLimit
-    - Added the option to run a scheduler check manually, using the button 
-      option introduced in NZBget v19, works only in NZBget 19+
-    - Added check on correct use of path separators, if incorrect a warning
-      message will be shown.
-
+"""
 Script structure:
 - main() -> scan / queue / schedule / button call
 - scan -> pause typical incoming NZBs
 - queue / schedule / button -> start whole completion check loop, get queue data list
     - lock_file() -> check if not running, otherwise create lock file
-    - get_prio_nzb() -> sent highest prio / oldest within to check
+    - is_script_paused_job() -> detect items paused by this script (parameter-based)
+        - has_nzb_parameter() -> check for CnpNZBFileName parameter
+    - get_prio_nzb() -> send highest prio / oldest within to check
         - nzbget_paused() -> check if NZBGet not paused, pause NZBGet for check
+          and wait for server connections to cool down
         - get_nzb_status() -> handle results of article check: resume / keep
           paused / mark bad / mark failed
             - get_nzb_data() -> extract the data from the nzb
-                - fix_nzb() -> fix 1 line nzbs
+                - fix_nzb() -> fix 1 line nzbs (single-line stream parse)
             - check_failure_status() -> recv messages
                 - get_server_settings() -> extract NZBGet server info
-                - create_sockets() -> build sockets
+                - create_sockets() -> build sockets (with pre-connect queue cooldown)
                 - check_send_server_reply() -> check recv messages, article 
                   ok/nok,
                     login, send messages.
                     - is_number() -> check if a str is a number
+                    - is_max_connections_reply() -> detect NNTP 502 max-connection replies
+                - drop sockets that hit max-connection replies and continue with remaining sockets
             - unpause_nzb() -> resume nzb if requested
             - mark_bad() -> mark nzb bad
             - force_failure() -> force a failure of nzb
