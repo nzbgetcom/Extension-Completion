@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2024 Denis <denis@nzbget.com>
+# Copyright (C) 2024-2026 Denis <denis@nzbget.com>
 #
 # This program is free software; you can redistribute it and/or modify it
 # under the terms of the GNU Lesser General Public License as published by
@@ -191,6 +191,33 @@ class Tests(unittest.TestCase):
                 json.loads(file.read())
             except ValueError as e:
                 self.fail("manifest.json is not valid.")
+
+
+class UnitTests(unittest.TestCase):
+    def test_is_max_connections_reply(self):
+        from main import is_max_connections_reply
+        self.assertTrue(is_max_connections_reply("502", "Too many connections"))
+        self.assertTrue(is_max_connections_reply("502", "Maximum connections reached"))
+        self.assertFalse(is_max_connections_reply("502", "Access denied"))
+        self.assertFalse(is_max_connections_reply("480", "Too many connections"))
+
+    def test_has_nzb_parameter(self):
+        from main import has_nzb_parameter
+        params1 = [{"Name": "Category", "Value": "Movies"}, {"Name": "CnpNZBFileName", "Value": "test.nzb"}]
+        params2 = [{"Name": "Category", "Value": "Movies"}]
+        self.assertTrue(has_nzb_parameter(params1, "CnpNZBFileName"))
+        self.assertFalse(has_nzb_parameter(params2, "CnpNZBFileName"))
+        self.assertFalse(has_nzb_parameter(None, "CnpNZBFileName"))
+        self.assertFalse(has_nzb_parameter([], "CnpNZBFileName"))
+
+    def test_is_script_paused_job(self):
+        from main import is_script_paused_job
+        job1 = {"Status": "PAUSED", "Parameters": [{"Name": "CnpNZBFileName", "Value": "test.nzb"}]}
+        job2 = {"Status": "DOWNLOADING", "Parameters": [{"Name": "CnpNZBFileName", "Value": "test.nzb"}]}
+        job3 = {"Status": "PAUSED", "Parameters": [{"Name": "Category", "Value": "Movies"}]}
+        self.assertTrue(is_script_paused_job(job1))
+        self.assertFalse(is_script_paused_job(job2))
+        self.assertFalse(is_script_paused_job(job3))
 
 
 if __name__ == "__main__":
