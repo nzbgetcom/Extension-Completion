@@ -198,6 +198,7 @@ class UnitTests(unittest.TestCase):
         from main import is_max_connections_reply
         self.assertTrue(is_max_connections_reply("502", "Too many connections"))
         self.assertTrue(is_max_connections_reply("502", "Maximum connections reached"))
+        self.assertTrue(is_max_connections_reply("502", "connection limit"))
         self.assertFalse(is_max_connections_reply("502", "Access denied"))
         self.assertFalse(is_max_connections_reply("480", "Too many connections"))
 

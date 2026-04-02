@@ -540,7 +540,11 @@ def is_max_connections_reply(server_reply, reply):
     if server_reply != "502":
         return False
     text = str(reply).lower()
-    return "maximum connections" in text or "too many connections" in text
+    return (
+        "maximum connections" in text 
+        or "too many connections" in text 
+        or "connection limit" in text
+    )
 
 
 def check_send_server_reply(
