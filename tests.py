@@ -219,6 +219,39 @@ class UnitTests(unittest.TestCase):
         self.assertFalse(is_script_paused_job(job2))
         self.assertFalse(is_script_paused_job(job3))
 
+    def test_fix_nzb(self):
+        from main import fix_nzb
+        single_line = "<segment bytes=100>abc</segment><segment bytes=200>def</segment>"
+        result = fix_nzb(single_line)
+        self.assertEqual(len(result), 2)
+        self.assertEqual(result[0], "<segment bytes=100>abc</segment>")
+        self.assertEqual(result[1], "<segment bytes=200>def</segment>")
+
+    def test_check_send_server_reply_max_conn(self):
+        from main import check_send_server_reply
+        import sys
+        
+        class MockSocket:
+            def send(self, data):
+                pass
+            def close(self):
+                pass
+
+        sock = MockSocket()
+        reply = "502 Too many connections"
+
+        import main
+        main.end_loop = False
+
+        error, id_used, server_reply, msg_id_used = check_send_server_reply(
+            sock, reply, "alt.binaries.test", "msgid123", 0, "news.example.com", "user", "pass"
+        )
+
+        self.assertFalse(error)
+        self.assertFalse(id_used)
+        self.assertEqual(server_reply, "MAX_CONN")
+        self.assertIsNone(msg_id_used)
+
 
 if __name__ == "__main__":
     unittest.main()

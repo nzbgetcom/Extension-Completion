@@ -1537,7 +1537,7 @@ def check_failure_status(rar_msg_ids, failed_limit, nzb_age):
         if EXTREME:
             print("[E] Receiving remaining replies:")
         # Start first loop after last socket used for receive to avoid errors
-        m = socket_list.index(i)
+        m = socket_list.index(i) if i in socket_list else 0
         for k in range(0, 8):  # loop multiple so all data will be received
             for i in socket_list[m:]:  # loop through ok sockets
                 reply = None
@@ -1797,16 +1797,6 @@ def nzbget_paused():
         if VERBOSE:
             print("[V] Waiting for NZBGet to end downloading")
             sys.stdout.flush()
-        if download_rate <= 0:
-            if VERBOSE:
-                print(
-                    "[V] Waiting 5 sec while NZBGet closes the news "
-                    + "server connections."
-                )
-                sys.stdout.flush()
-            time.sleep(
-                5
-            )  # NZBGet sends QUIT after 5 seconds of innactivity (of a particular connection).
         while download_rate > 0:  # avoid double use of connections
             if VERBOSE:
                 print(
@@ -1818,16 +1808,14 @@ def nzbget_paused():
             time.sleep(1)  # let the connections cool down 1 sec
             nzbget_status = NZBGet.status()
             download_rate = nzbget_status["DownloadRate"]
-            if download_rate == 0:
-                if VERBOSE:
-                    print(
-                        "[V] Waiting 5 sec while NZBGet closes the news "
-                        + "server connections."
-                    )
-                    sys.stdout.flush()
-                time.sleep(
-                    5
-                )  # NZBGet sends QUIT after 5 seconds of innactivity (of a particular connection).
+
+        if VERBOSE:
+            print(
+                "[V] Waiting 5 sec while NZBGet closes the news "
+                + "server connections."
+            )
+            sys.stdout.flush()
+        time.sleep(5)  # NZBGet sends QUIT after 5 seconds of innactivity (of a particular connection).
         if VERBOSE:
             print("[V] Downloading for NZBGet paused")
             sys.stdout.flush()
@@ -1990,8 +1978,10 @@ def scheduler_call():
     if len(jobs["result"]) > 0:
         paused_jobs = [job for job in jobs["result"] if is_script_paused_job(job)]
         if len(paused_jobs) > 0 and not lock_file():  # check if script is not already running
-            get_prio_nzb(jobs["result"], paused_jobs)
-            del_lock_file()
+            try:
+                get_prio_nzb(jobs["result"], paused_jobs)
+            finally:
+                del_lock_file()
     elif VERBOSE:
         print("[V] Empty queue")
 
@@ -2024,10 +2014,12 @@ def queue_call():
         if len(jobs["result"]) > 0:
             paused_jobs = [job for job in jobs["result"] if is_script_paused_job(job)]
             if len(paused_jobs) > 0 and not lock_file():  # check if script is not already running
-                if event == "NZB_DOWNLOADED":
-                    queue_time = time.time()
-                get_prio_nzb(jobs["result"], paused_jobs)
-                del_lock_file()
+                try:
+                    if event == "NZB_DOWNLOADED":
+                        queue_time = time.time()
+                    get_prio_nzb(jobs["result"], paused_jobs)
+                finally:
+                    del_lock_file()
 
 
 def scan_call():
