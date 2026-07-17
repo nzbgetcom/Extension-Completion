@@ -1,0 +1,86 @@
+{
+  "about": {
+    "message": "Verifies that enough articles are available before starting the download.",
+    "description": "Short description of the extension shown as a heading in the About section."
+  },
+  "description": {
+    "message": "The extension checks if the data in the NZB file is sufficiently complete at your usenet provider(s),\nbefore starting the download.\n\nIf incomplete it would wait for a certain period and check the completion of the NZB file again.\nThis check is done by requesting the header STAT/HEAD,\nand is in normal cases done within seconds (like 1 - 5 sec. for a 1 GB file).\nThis method is significantly faster than when NZBGet would report a failure,\nafter actual downloading a (part of) the files that end up incomplete.\nThe script is typically useful for issues related to:\n- very recent posts\n- failed downloads, which after a while are just ok (propagation issues),\n- incomplete posts,\n- taken down posts (DMCA, etc.),\n- old posts,\n- long par repair times,\n- downloading (parts of) NZB files beyond repair,\n- unnecessary use of expensive block / slow fill accounts.\n\nNOTE: To stop the script or delete the .lock file, restart NZBGet via SYSTEM.",
+    "description": "Full description of the extension shown in settings. DO NOT translate 'NZBGet'."
+  },
+  "requirements": {
+    "message": "Python 3.8.0 or higher is required to be installed on your system.",
+    "description": "System requirements (each requirement is a separate string). DO NOT translate technical version strings (e.g., Python 3.8.x)."
+  },
+  "agelimit_desc": {
+    "message": "NZB max age.\n\nMax age of the NZB file in hours till the scheduler script stops checking\nthe NZB file, moves it to the history, and marks it BAD or FAILED. Basically\nthis defines the maximum propagation delay.\nThis option is also used for the FillServer option.\nDefault = 4.",
+    "description": "Help text for the AgeLimit option in Completion."
+  },
+  "agesortlimit_desc": {
+    "message": "NZB max sort age.\n\nMax age of the NZB file in hours till the scheduler script stops prioritizing\nage over queue order. Basically this defines the upperbound of the take down window.\nDefault = 48.",
+    "description": "Help text for the AgeSortLimit option in Completion."
+  },
+  "checkdupes_desc": {
+    "message": "Check duplicate NZBs stored in the history.\n\nNZBs with the DUPE status in the history will be checked, note\nNZBGet option DupeCheck needs to be enabled for this to work.\nThe option SameScore will only check the dupes that have the same or higher\nDUPE score as the item in the queue. This means that only when the file in the queue is\nolder than AgeLimit and marked BAD or FAILED, a lower score DUPE could be\nmoved back to the queue.\nDefault = SameScore.",
+    "description": "Help text for the CheckDupes option in Completion."
+  },
+  "forcefailure_desc": {
+    "message": "The NZBGet mark BAD option might not be supported by programs like Sonarr.\n\nTherefore this option forces a failure, so Sonarr will know that it has to\npush an other nzb, because the current one failed.\nNOTE: This option will result in a warning messages for each .rar file and at\nleast one error from NZBGet when forcing the FAILURE status.\nDefault = Yes.",
+    "description": "Help text for the ForceFailure option in Completion. DO NOT translate the exact uppercase label (NOTE) as they are used to render UI badges. DO NOT translate the fixed values 'yes' and 'no'."
+  },
+  "setparamsonsuccess_desc": {
+    "message": "Sets post-processing parameters for the group when the completion check succeeds.\n\nSpecify parameters as 'ParamName=ParamValue, ParamName2=ParamValue2'.\nExample: 'CompletionCheck=True, DownloadStatus=Success'.\nDefault = blank.",
+    "description": "Help text for the SetParamsOnSuccess option in Completion."
+  },
+  "setparamsonfailure_desc": {
+    "message": "Sets post-processing parameters for the group when the completion check fails.\n\nSpecify parameters as 'ParamName=ParamValue, ParamName2=ParamValue2'.\nExample: 'CompletionCheck=False, DownloadStatus=Failure'.\nDefault = blank.",
+    "description": "Help text for the SetParamsOnFailure option in Completion."
+  },
+  "checklimit_desc": {
+    "message": "Percentage of archive articles to check.\n\nA higher percentage will be more accurate, but will increase the duration of\nthe check.\nDefault = 10.",
+    "description": "Help text for the CheckLimit option in Completion."
+  },
+  "minarticles_desc": {
+    "message": "Minimal number of articles to check.\n\nIncreases number of articles to be checked on very small NZB files.\nDefault = 50.",
+    "description": "Help text for the MinArticles option in Completion."
+  },
+  "maxarticles_desc": {
+    "message": "Maximum number of articles to check.\n\nReduces the time it takes to check large NZB files.\nWon't override the FullCheckNoPars option.\nDefault = 1000.",
+    "description": "Help text for the MaxArticles option in Completion."
+  },
+  "fullchecknopars_desc": {
+    "message": "Check all archives when no pars.\n\nForce a full check on all the archives articles in the release when no or\nonly 1 par file is included. This to guarantee all articles are there and you\ndon't waste bandwidth because just 1 article is missing.\nDefault = Yes.",
+    "description": "Help text for the FullCheckNoPars option in Completion. DO NOT translate the fixed values 'yes' and 'no'."
+  },
+  "categories_desc": {
+    "message": "Categories to check for completion.\n\nComma separated list like 'TV-HD, TV, Movies, etc'. Leave blank for all\ncategories. Note that the category of an NZB file is shown in the download\nand history queue.\nDefault = blank.",
+    "description": "Help text for the Categories option in Completion."
+  },
+  "servers_desc": {
+    "message": "Servers to use for completion check.\n\nComma separated list like '1, 3, 4'. Leave blank for all news-servers.\nNews-server numbers are equal to the server numbering in the NZBGet settings\non the NEWS-SERVERS tab.\nSuggestion is to specify at least your main news-servers.\nDefault = blank.",
+    "description": "Help text for the Servers option in Completion."
+  },
+  "fillservers_desc": {
+    "message": "FillServers to use for completion check, will only be used in last check.\n\nComma separated list like '1, 3, 4'. Leave blank for no news-servers.\nNews-server numbers are equal to the server numbering in the NZBGet settings\non the NEWS-SERVERS tab. Last check is check when NZB is older than AgeLimit.\nSuggestion is to specify your fill/block news-servers.\nDefault = blank.",
+    "description": "Help text for the FillServers option in Completion. DO NOT translate the fixed values 'yes' and 'no'."
+  },
+  "maxfailure_desc": {
+    "message": "Maximum failure percentage for main server.\n\nThis option requires that at least X percent of the articles are available on\nthe lowest Server.Level and Server.Group news-server (your main news-server).\nWhen more than X percentage fails on your main news-server, the NZB is\nskipped to avoid burning through fill servers. Use 0 to disable.\nDefault = 0.",
+    "description": "Help text for the MaxFailure option in Completion."
+  },
+  "ignorequeuepriority_desc": {
+    "message": "Ignore queue priority and always validate items immediately\n\nDefault = No.",
+    "description": "Help text for the IgnoreQueuePriority option in Completion. DO NOT translate the fixed values 'yes' and 'no'."
+  },
+  "verbose_desc": {
+    "message": "Print more info to the log for debugging.\n\nDefault = No.",
+    "description": "Help text for the Verbose option in Completion. DO NOT translate the fixed values 'yes' and 'no'."
+  },
+  "extreme_desc": {
+    "message": "Print even more info to the log for debugging.\n\nThis will print your news-server passwords in the logs too.\nDefault = No.",
+    "description": "Help text for the Extreme option in Completion. DO NOT translate the fixed values 'yes' and 'no'."
+  },
+  "checkqueue_desc": {
+    "message": "Queue check.\n\nTo check the by the script paused items in the queue manually, click the\n'Check' button. A scheduler call will then be executed.",
+    "description": "Help text for the CheckQueue option in Completion."
+  }
+}

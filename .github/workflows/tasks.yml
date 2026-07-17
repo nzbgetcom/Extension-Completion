@@ -27,6 +27,6 @@ jobs:
     needs: [manifest, tests]
     uses: nzbgetcom/nzbget-extensions/.github/workflows/extension-release.yml@main
     with:
-      release-file-list: main.py manifest.json
+      release-file-list: _locales/ main.py manifest.json
       release-file-name: completion
       release-dir: Completion
