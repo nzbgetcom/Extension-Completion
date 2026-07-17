@@ -18,6 +18,6 @@ If you need support for Python 2.x versions then you can get legacy version v1.1
 - downloading (parts of) NZB files beyond repair,
 - unnecessary use of expensive block / slow fill accounts.
 
-The above would generally result in an (error) messages like ‘missing articles’, ‘unable to repair’ or ‘additional par files required’, ‘not enough par-blocs’, etc. The script avoids these messages.
+The above would generally result in error messages like ‘missing articles’, ‘unable to repair’ or ‘additional par files required’, ‘not enough par-blocs’, etc. The script avoids these messages.
 
 Author: kloaknet

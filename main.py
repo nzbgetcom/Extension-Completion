@@ -1819,7 +1819,7 @@ def nzbget_paused():
                 + "server connections."
             )
             sys.stdout.flush()
-        time.sleep(5)  # NZBGet sends QUIT after 5 seconds of innactivity (of a particular connection).
+        time.sleep(5)  # NZBGet sends QUIT after 5 seconds of inactivity (of a particular connection).
         if VERBOSE:
             print("[V] Downloading for NZBGet paused")
             sys.stdout.flush()
@@ -1995,7 +1995,7 @@ def queue_call():
     Script is called as queue script
     check if new files in queue should be checked by the completion script
     Option NZBGet EventInterval set to -1 avoids script being called each
-    time a part is donwloaded.
+    time a part is downloaded.
     """
     global queue_time
     queue_time = -1
@@ -2032,8 +2032,8 @@ def scan_call():
     and marks the file as paused by the script. Files not paused by the
     script won't be checked on completion.
     NZBGet doesn't provide the actual name of the file when in the queue.
-    if 2 same filename items appear at the same time the 2nd file wiil be
-    _2.nzb.queued and if 2 items are added after eachoter, they will be
+    if 2 same filename items appear at the same time the 2nd file will be
+    _2.nzb.queued and if 2 items are added after each other, they will be
     nzb.queued and nzb.2.queued. NZBGet does not provide the _2. or .2. in
     e.g. queue, scheduler calls, 'listgroups' or 'history'. The scan script
     adds the NZBPR_CnpNZBFileName variable to know the exact file name, and
