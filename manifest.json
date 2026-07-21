@@ -14,8 +14,7 @@
         "Python 3.8.0 or higher is required to be installed on your system."
     ],
     "description": [
-        "The extension checks if the data in the NZB file is sufficiently complete at your usenet provider(s),",
-        "before starting the download.",
+        "The extension checks if the data in the NZB file is sufficiently complete at your usenet provider(s), before starting the download.",
         "",
         "If incomplete it would wait for a certain period and check the completion of the NZB file again.",
         "This check is done by requesting the header STAT/HEAD,", 
