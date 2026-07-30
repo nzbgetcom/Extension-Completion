@@ -1,10 +1,12 @@
-> **Note:** This script is compatible with python 3.8.x and above.
-If you need support for Python 2.x versions then you can get legacy version v1.1.0 [here](https://forum.nzbget.net/viewtopic.php?f=8&t=1736&sid=c01b92bc3d3baf05bc1a9546d9c08ed8).
+> **Note:** this repo is a fork of the original github [project](https://github.com/nzbget/Completion)
+> made by @hugbug.
 
-## NZBGet Versions
+## Requirements
 
-- stable v23+ [v3.3](https://github.com/nzbgetcom/Extension-Completion/releases/tag/v3.3)
-- legacy v22 [v2.0](https://github.com/nzbgetcom/Extension-Completion/releases/tag/v2.0)
+- NZBGet v23+ and Python 3.8+
+- Legacy NZBGet v22: use v2.0 release
+- Python 3.7 or older: use v1.1.0 release
+- Python 2.x: use v1.1.0 release
 
 # Completion
 
@@ -18,6 +20,6 @@ If you need support for Python 2.x versions then you can get legacy version v1.1
 - downloading (parts of) NZB files beyond repair,
 - unnecessary use of expensive block / slow fill accounts.
 
-The above would generally result in an (error) messages like ‘missing articles’, ‘unable to repair’ or ‘additional par files required’, ‘not enough par-blocs’, etc. The script avoids these messages.
+The above would generally result in error messages like ‘missing articles’, ‘unable to repair’ or ‘additional par files required’, ‘not enough par-blocs’, etc. The script avoids these messages.
 
 Author: kloaknet
