@@ -31,6 +31,7 @@ import traceback
 import html
 import errno
 from xmlrpc.client import ServerProxy
+from urllib.parse import quote
 from operator import itemgetter
 
 sys.stdout.reconfigure(encoding="utf-8")
@@ -201,7 +202,7 @@ def connect_to_nzbget():
     Establish connection to NZBGet via RPC-API using HTTP.
     """
     # Build an URL for XML-RPC requests:
-    xmlRpcUrl = "http://%s:%s@%s:%s/xmlrpc" % (USERNAME, PASSWORD, HOST, PORT)
+    xmlRpcUrl = "http://%s:%s@%s:%s/xmlrpc" % (quote(USERNAME, safe=""), quote(PASSWORD, safe=""), HOST, PORT)
     # Create remote server object
     NZBGet = ServerProxy(xmlRpcUrl)
     return NZBGet

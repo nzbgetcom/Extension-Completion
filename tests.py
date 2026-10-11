@@ -26,6 +26,7 @@ import subprocess
 import xmlrpc.server
 import xml.etree.cElementTree as ET
 import shutil
+from unittest.mock import patch
 
 SUCCESS = 93
 NONE = 95
@@ -185,6 +186,21 @@ class Tests(unittest.TestCase):
         del os.environ["NZBNP_CATEGORY"]
         self.assertEqual(code, 0)
 
+    def test_scheduler_mode_special_chars_password(self):
+        set_defaults_env()
+        os.environ["NZBOP_CONTROLPASSWORD"] = "p@ss#w0rd%test$"
+        os.environ["NZBSP_TASKID"] = "ID"
+        server = http.server.HTTPServer((HOST, int(PORT)), NZBGetServer)
+        thread = threading.Thread(target=server.serve_forever)
+        thread.start()
+        [out, code, err] = run_script()
+        server.shutdown()
+        server.server_close()
+        thread.join()
+        del os.environ["NZBSP_TASKID"]
+        clean_up()
+        self.assertEqual(code, 0)
+
     def test_manifest(self):
         with open(ROOT + "/manifest.json", encoding="utf-8") as file:
             try:
@@ -252,6 +268,49 @@ class UnitTests(unittest.TestCase):
         self.assertFalse(id_used)
         self.assertEqual(server_reply, "MAX_CONN")
         self.assertIsNone(msg_id_used)
+
+    def test_connect_to_nzbget_encodes_special_chars(self):
+        os.environ["NZBOP_CONTROLIP"] = HOST
+        os.environ["NZBOP_CONTROLPORT"] = PORT
+        os.environ["NZBOP_CONTROLUSERNAME"] = USERNAME
+        os.environ["NZBOP_CONTROLPASSWORD"] = PASSWORD
+        os.environ["NZBOP_TEMPDIR"] = TMP_DIR
+
+        import main
+        main.USERNAME = "user@test"
+        main.PASSWORD = "p@ss#w0rd%test$"
+        main.HOST = "127.0.0.1"
+        main.PORT = "6789"
+
+        with patch("main.ServerProxy") as mock_proxy:
+            main.connect_to_nzbget()
+            url = mock_proxy.call_args[0][0]
+
+        self.assertIn("user%40test", url)
+        self.assertIn("p%40ss%23w0rd%25test%24", url)
+        self.assertIn("127.0.0.1:6789", url)
+        self.assertIn("/xmlrpc", url)
+
+    def test_connect_to_nzbget_normal_password(self):
+        os.environ["NZBOP_CONTROLIP"] = HOST
+        os.environ["NZBOP_CONTROLPORT"] = PORT
+        os.environ["NZBOP_CONTROLUSERNAME"] = USERNAME
+        os.environ["NZBOP_CONTROLPASSWORD"] = PASSWORD
+        os.environ["NZBOP_TEMPDIR"] = TMP_DIR
+
+        import main
+        main.USERNAME = "TestUser"
+        main.PASSWORD = "TestPassword"
+        main.HOST = "127.0.0.1"
+        main.PORT = "6789"
+
+        with patch("main.ServerProxy") as mock_proxy:
+            main.connect_to_nzbget()
+            url = mock_proxy.call_args[0][0]
+
+        self.assertIn("TestUser:TestPassword@", url)
+        self.assertIn("127.0.0.1:6789", url)
+        self.assertIn("/xmlrpc", url)
 
 
 if __name__ == "__main__":
